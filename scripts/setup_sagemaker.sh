@@ -45,9 +45,14 @@ if [ ! -x "$VENV_DIR/bin/python" ]; then
 fi
 
 # ---------------------------------------------------------------- 4. PyTorch の CUDA 版を決めてインストール
+STAMP="$VENV_DIR/.torch_backend"
 if [ -z "${TORCH_BACKEND:-}" ]; then
     DRIVER="$(nvidia-smi --query-gpu=driver_version --format=csv,noheader 2>/dev/null | head -n1 || true)"
-    if [ -z "$DRIVER" ]; then
+    if [ -z "$DRIVER" ] && [ -f "$STAMP" ]; then
+        # GPU なしのインスタンスに切り替えた場合は、入っている版をそのまま使う
+        # （CUDA 版の PyTorch も CPU で動くので、入れ直しを避ける）
+        TORCH_BACKEND="$(cat "$STAMP")"
+    elif [ -z "$DRIVER" ]; then
         TORCH_BACKEND="cpu"
     else
         MAJOR="${DRIVER%%.*}"
@@ -63,7 +68,6 @@ log "4/5 パッケージのインストール（PyTorch: $TORCH_BACKEND, GPU ド
 
 # 前回と異なる CUDA 版を選んだ場合（例: CPU インスタンスで作った環境を GPU で使う）は torch を入れ直す
 REINSTALL=()
-STAMP="$VENV_DIR/.torch_backend"
 if [ -f "$STAMP" ] && [ "$(cat "$STAMP")" != "$TORCH_BACKEND" ]; then
     echo "PyTorch の CUDA 版が $(cat "$STAMP") → $TORCH_BACKEND に変わるため torch を入れ直します。"
     REINSTALL=(--reinstall-package torch --reinstall-package torchvision)
