@@ -4,27 +4,63 @@
 スクリプテッド・エキスパートが自動生成したデータから、LeRobot の模倣学習（ACT）で獲得する。
 
 - ロボット: SO-101（[so101-nexus](https://github.com/johnsutor/so101-nexus) の MuJoCo モデル・環境を土台に使用）
-- 学習: [LeRobot](https://github.com/huggingface/lerobot)（ACT）
-- 実行環境: Amazon SageMaker Studio（JupyterLab）
+- 学習: [LeRobot](https://github.com/huggingface/lerobot)（ACT。のちに VLA へ置き換える予定）
+- 実行環境: Amazon SageMaker Studio（JupyterLab）。データ生成・評価は CPU インスタンス（`ml.c5.9xlarge`）、
+  学習は GPU インスタンス（`ml.g5.xlarge`）
 
 ## 進捗
 
 | 段階 | 内容 | 状態 |
 |---|---|---|
-| 0 | 環境構築、グリッパ寸法・作業領域の確認、把持できるかの確認 | 完了（SageMaker で確認済み）。結果: [docs/step0_notes.md](docs/step0_notes.md) |
-| 1 | 直方体 1 個でエキスパート → データ生成 → ACT 学習 → 評価 | 完了（成功率 82%）。手順: [docs/step1_howto.md](docs/step1_howto.md)、結果: [docs/step1_results.md](docs/step1_results.md) |
-| 2 | 形・大きさがランダムなにんじんの小片を 5〜20 個散らばせ、ロボットに一番近い片を鍋に入れる | 実装済み（SageMaker での実行待ち）。手順: [docs/step2_howto.md](docs/step2_howto.md) |
+| 0 | 環境構築、グリッパ寸法・作業領域の確認、把持できるかの確認 | 完了。結果: [docs/step0_notes.md](docs/step0_notes.md) |
+| 1 | 立方体 1 個でエキスパート → データ生成 → ACT 学習 → 評価 | 完了（成功率 82%）。手順: [docs/step1_howto.md](docs/step1_howto.md)、結果: [docs/step1_results.md](docs/step1_results.md) |
+| 2 | 形・大きさがランダムなにんじんの小片を 5〜20 個散らばせ、ロボットに一番近い片を鍋に入れる | データ生成（成功 1,000 エピソード）と動画での確認まで完了。次は学習。手順: [docs/step2_howto.md](docs/step2_howto.md) |
 | 3 | 複数食材（じゃがいも・大根）と言葉による指示、分布外評価、薄切りの失敗デモ | 未着手 |
 | 4 | 動画・レポート・リポジトリ整理 | 未着手 |
+| ― | ACT を VLA に置き換える | 未着手 |
+
+## 次回の作業（段階2の続き）
+
+詳しい手順と結果の見方は [docs/step2_howto.md](docs/step2_howto.md) の B・C。
+
+1. **学習**（`ml.g5.xlarge`、約 1 時間 45 分）
+
+   ```bash
+   cd ~/user-default-efs/physical_ai_exam
+   git pull
+   bash scripts/setup_sagemaker.sh
+   bash scripts/train_act.sh pot_multi_v1 act_pot_multi_v1 --steps=80000
+   ```
+
+2. **評価**（`ml.c5.9xlarge`、各 5 分程度。1 つ目が終わってから 2 つ目を実行）
+
+   ```bash
+   cd ~/user-default-efs/physical_ai_exam
+   git pull
+   bash scripts/setup_sagemaker.sh
+   bash scripts/evaluate.sh act_pot_multi_v1 100 --task multi
+   bash scripts/evaluate.sh act_pot_multi_v1 100 --task multi --piece-set carrot_train --name act_pot_multi_v1_seen
+   ```
+
+3. 生成・学習・評価の結果を `docs/step2_results.md` にまとめる。
+
+## ドキュメント
+
+| ファイル | 内容 |
+|---|---|
+| [docs/plan.md](docs/plan.md) | 当初の計画メモ（課題の要件・方針。段階2以降の細部は実装と異なる） |
+| [docs/step0_notes.md](docs/step0_notes.md) | 段階0: 環境・グリッパ寸法・作業領域の計測結果 |
+| [docs/step1_howto.md](docs/step1_howto.md) | 段階1: SageMaker での実行手順（インスタンスの切り替え方を含む） |
+| [docs/step1_results.md](docs/step1_results.md) | 段階1: 結果（データ生成・学習・評価） |
+| [docs/step2_howto.md](docs/step2_howto.md) | 段階2: 実行手順と設計メモ（食材片の形・並べ方・開始姿勢・エキスパートの掴み方） |
 
 ## セットアップ（SageMaker Studio）
 
-1. JupyterLab スペースを作成する（イメージ: SageMaker Distribution 最新、ストレージ 50GB 程度。
-   学習時は GPU インスタンス、例: `ml.g5.xlarge`）。
-2. ターミナルでリポジトリを取得し、セットアップスクリプトを実行する。
+1. JupyterLab スペースを作成する（イメージ: SageMaker Distribution 最新、ストレージ 50GB 程度）。
+2. ターミナル（File → New → Terminal）でリポジトリを取得し、セットアップスクリプトを実行する。
 
    ```bash
-   cd ~
+   cd ~/user-default-efs
    git clone https://github.com/makonaga/physical_ai_exam.git
    cd physical_ai_exam
    bash scripts/setup_sagemaker.sh
@@ -37,27 +73,42 @@
      手動で指定する場合は `TORCH_BACKEND=cu126 bash scripts/setup_sagemaker.sh` のようにする。
 3. ノートブックを開き、カーネル **「Python 3.12 (pai)」** を選んで実行する。
 
+`git pull` が `Your local changes ... would be overwritten` で止まったときは、ノートブックのタブを閉じてから
+`git checkout -- notebooks/` を実行し、もう一度 `git pull` する（ノートブックの実行結果が残っているだけ）。
+
+## タスクの種類
+
+データ生成・評価のスクリプトに `--task` で指定する。
+
+| `--task` | 内容 | 使った段階 |
+|---|---|---|
+| `cube` | 25mm 角の立方体 1 個を鍋に入れる | 段階1 |
+| `pieces` | 形・大きさがランダムな食材片 1 個を鍋に入れる | （比較用） |
+| `multi` | 食材片を 5〜20 個散らばせ、ロボットに一番近い片を鍋に入れる | 段階2 |
+
+どのタスクも、ポリシーの入力は俯瞰カメラ・手首カメラの画像（224×224）と 6 関節の角度、
+出力は 6 関節の目標角度（25Hz）。物体の真の位置はポリシーに与えない。
+
+## スクリプト
+
+時間のかかる処理は、ターミナルから裏で実行するスクリプトにしている。
+ログは `logs/<処理>_<名前>_<日時>.log`（例: `logs/generate_pot_multi_v1_20261018_101500.log`）に書かれ、
+`tail -f logs/<ファイル名>` で進み具合を見られる。新しい順の一覧は `ls -t logs/ | head -3`。
+
+| スクリプト | 内容 | 向いているインスタンス |
+|---|---|---|
+| `scripts/setup_sagemaker.sh` | 環境構築（スペース起動のたびに実行） | どれでも |
+| `scripts/generate_dataset.sh <名前> <エピソード数> [--task ...]` | エキスパートで学習データを生成（並列） | CPU（vCPU が多いもの） |
+| `scripts/export_dataset_videos.sh <名前> [本数]` | 生成したデータを再生用の動画に書き出す | どれでも |
+| `scripts/train_act.sh <データ名> <実行名> [--steps=...]` | ACT の学習 | GPU |
+| `scripts/evaluate.sh <実行名> <エピソード数> [--task ...]` | 学習済みポリシーの評価（並列） | CPU（vCPU が多いもの） |
+
 ## ノートブック
 
 | ノートブック | 内容 |
 |---|---|
 | `notebooks/00_env_check.ipynb` | GPU・描画バックエンドの確認、ランダム動作の動画、グリッパ開口幅、真上把持の作業領域、小片の把持テスト |
-| `notebooks/view_videos.ipynb` | 生成データ・評価の動画をノートブック上で再生する（ダウンロード不要） |
-
-出力（動画・図・計測結果）は `outputs/` に保存する（Git には含めない）。
-
-## スクリプト
-
-時間のかかる処理は、ターミナルから裏で実行するスクリプトにしている（ログは `logs/`）。
-詳しい使い方は [docs/step1_howto.md](docs/step1_howto.md)。
-
-| スクリプト | 内容 | 向いているインスタンス |
-|---|---|---|
-| `scripts/setup_sagemaker.sh` | 環境構築（スペース起動のたびに実行） | どれでも |
-| `scripts/generate_dataset.sh` | エキスパートで学習データを生成（並列） | CPU（vCPU が多いもの） |
-| `scripts/train_act.sh` | ACT の学習 | GPU |
-| `scripts/evaluate.sh` | 学習済みポリシーの評価（並列） | CPU（vCPU が多いもの） |
-| `scripts/export_dataset_videos.sh` | 生成したデータを見やすい動画に書き出す | どれでも |
+| `notebooks/view_videos.ipynb` | 生成データ・評価の動画をノートブック上で再生する（1 行目の `FOLDER` を見たいフォルダにして Run All Cells） |
 
 ## ディレクトリ構成
 
@@ -65,17 +116,25 @@
 ├── src/so101_food/
 │   ├── utils/     # 描画バックエンド選択、描画品質、動画保存、並列実行
 │   ├── sim/       # グリッパ開口幅の計測
-│   ├── expert/    # 真上把持の IK、エキスパート（把持 → 運搬 → 投入 → 帰還）
+│   ├── expert/    # 真上把持の IK、掴み方の選択、エキスパート（把持 → 運搬 → 投入 → 帰還）
 │   ├── shapes/    # 食材片の形状生成器（円柱・楕円体をランダムな平面で切った凸多面体）
 │   ├── env/       # 鍋投入タスクの環境（食材片の並べ方を含む）、カメラ（俯瞰・手首）の描画
-│   ├── datagen/   # 成功フィルタ付きデータ生成（並列、LeRobot v3 形式）
+│   ├── datagen/   # 成功フィルタ付きデータ生成（並列、LeRobot v3 形式）、動画への書き出し
 │   └── eval/      # 学習済みポリシーの評価（並列）
-├── assets/pieces/ # 事前生成した食材片の形状セット（学習用・評価用）
+├── assets/pieces/ # 事前生成した食材片の形状セット（学習用 300 個・評価用 100 個）
 ├── notebooks/     # SageMaker で実行するノートブック
 ├── scripts/       # セットアップ・データ生成・学習・評価のスクリプト
 ├── tests/         # 動作確認テスト（pytest）
-└── docs/          # 計測結果・設計メモ（レポート素材）
+└── docs/          # 計画メモ・手順書・結果（レポート素材）
 ```
+
+次のフォルダは実行時に作られ、Git には含めない（`.gitignore`）。
+
+| フォルダ | 中身 |
+|---|---|
+| `data/` | 生成した学習データ（LeRobot v3 形式。例: `data/pot_multi_v1/`） |
+| `outputs/` | 学習済みモデル（`outputs/train/`）、評価結果（`outputs/eval/`）、データの動画（`outputs/dataset_videos/`） |
+| `logs/` | スクリプトのログ |
 
 ## テスト
 

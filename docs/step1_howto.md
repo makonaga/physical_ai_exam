@@ -45,8 +45,10 @@ bash scripts/generate_dataset.sh pot_cube_v1 300
   ```
 
   `episodes`（集めた成功エピソード数）と `expert_success_rate`（エキスパートの成功率）を見る。
-- 生成した映像は `data/pot_cube_v1/videos/observation.images.overhead/chunk-000/file-000.mp4`
-  （全エピソードが 1 本につながっている）。右クリック → Download で確認できる。
+- 生成したデータを動画で見るには、`bash scripts/export_dataset_videos.sh pot_cube_v1 6` で再生用の動画を作り、
+  `notebooks/view_videos.ipynb` の 1 行目を `FOLDER = "outputs/dataset_videos/pot_cube_v1"` にして
+  Run → Run All Cells を押す（データセットの中の動画は全エピソードが 1 本につながった AV1 形式で、
+  そのままではブラウザで再生できないことがある）。
 
 ## B. ACT の学習（ml.g5.xlarge）
 
