@@ -42,7 +42,7 @@
 | ノートブック | 内容 |
 |---|---|
 | `notebooks/00_env_check.ipynb` | GPU・描画バックエンドの確認、ランダム動作の動画、グリッパ開口幅、真上把持の作業領域、小片の把持テスト |
-| `notebooks/view_eval_videos.ipynb` | 評価動画をノートブック上で再生する（ダウンロード不要） |
+| `notebooks/view_videos.ipynb` | 生成データ・評価の動画をノートブック上で再生する（ダウンロード不要） |
 
 出力（動画・図・計測結果）は `outputs/` に保存する（Git には含めない）。
 
@@ -57,6 +57,7 @@
 | `scripts/generate_dataset.sh` | エキスパートで学習データを生成（並列） | CPU（vCPU が多いもの） |
 | `scripts/train_act.sh` | ACT の学習 | GPU |
 | `scripts/evaluate.sh` | 学習済みポリシーの評価（並列） | CPU（vCPU が多いもの） |
+| `scripts/export_dataset_videos.sh` | 生成したデータを見やすい動画に書き出す | どれでも |
 
 ## ディレクトリ構成
 

@@ -29,6 +29,18 @@ bash scripts/generate_dataset.sh pot_pieces_v1 600 --task pieces
 終わったら `head -25 data/pot_pieces_v1/generation_stats.json` で結果を確認する
 （`episodes` が 600、`expert_success_rate` が 0.95 以上なら次へ進んでよい）。
 
+### 生成したデータを動画で見る
+
+```bash
+bash scripts/export_dataset_videos.sh pot_pieces_v1 6
+```
+
+`outputs/dataset_videos/pot_pieces_v1/` に、等間隔に選んだ 6 エピソードの動画（左: 俯瞰カメラ、右: 手首カメラ。
+左上にエピソード番号・食材片の名前・経過時間）と、9 エピソードを 3×3 に並べた一覧動画 `grid_9.mp4` ができる。
+`notebooks/view_videos.ipynb` を開いて Run → Run All Cells で再生できる（ダウンロードも可）。
+特定のエピソードを見たいときは `bash scripts/export_dataset_videos.sh pot_pieces_v1 6 --episodes 0 100 200` のようにする。
+段階1のデータも `bash scripts/export_dataset_videos.sh pot_cube_v1 6` で同じように見られる。
+
 ## B. ACT の学習（ml.g5.xlarge）
 
 ```bash
@@ -58,7 +70,7 @@ bash scripts/evaluate.sh act_pot_pieces_v1 50 --task cube --name act_pot_pieces_
 
 結果はそれぞれ `cat outputs/eval/<名前>/summary.json` で確認する
 （名前は `act_pot_pieces_v1`、`act_pot_pieces_v1_seen`、`act_pot_cube_v1_on_pieces`、`act_pot_pieces_v1_on_cube`）。
-動画は `notebooks/view_eval_videos.ipynb` の `NAME` を変えて再生できる。
+動画は `notebooks/view_videos.ipynb` の `FOLDER` を `outputs/eval/<名前>/videos` に変えて再生できる。
 
 ## 結果の共有
 
