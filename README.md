@@ -12,7 +12,7 @@
 | 段階 | 内容 | 状態 |
 |---|---|---|
 | 0 | 環境構築、グリッパ寸法・作業領域の確認、把持できるかの確認 | 完了（SageMaker で確認済み）。結果: [docs/step0_notes.md](docs/step0_notes.md) |
-| 1 | 直方体 1 個でエキスパート → データ生成 → ACT 学習 → 評価 | 実装済み（SageMaker での実行待ち）。手順: [docs/step1_howto.md](docs/step1_howto.md) |
+| 1 | 直方体 1 個でエキスパート → データ生成 → ACT 学習 → 評価 | 完了（成功率 82%）。手順: [docs/step1_howto.md](docs/step1_howto.md)、結果: [docs/step1_results.md](docs/step1_results.md) |
 | 2 | ランダム凸多面体（切断した食材片）への置き換え | 未着手 |
 | 3 | 複数個・複数食材、分布外評価、薄切りの失敗デモ | 未着手 |
 | 4 | 動画・レポート・リポジトリ整理 | 未着手 |
