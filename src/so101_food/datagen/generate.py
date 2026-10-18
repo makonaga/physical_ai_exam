@@ -1,6 +1,7 @@
 """成功フィルタ付きの学習データ生成（並列）.
 
     python -m so101_food.datagen.generate --name pot_cube_v1 --episodes 300 --workers 36
+    python -m so101_food.datagen.generate --name pot_pieces_v1 --task pieces --episodes 600
 
 各ワーカーは次を繰り返し、自分の割り当て数だけ成功エピソードを集める。
 
@@ -11,6 +12,9 @@
 最後に全ワーカーのシャードを 1 つのデータセットに統合し、生成の統計
 （試行数・成功率・失敗の内訳）を ``generation_stats.json`` に書く。
 シャードは一時ディレクトリ（既定: ホーム配下のキャッシュ）に作り、統合後に消す。
+
+``--task pieces``（段階2）では、形状セットから ``--pool-size`` 個の食材片を選んで環境を作り、
+``--rebuild-every`` 回の試行ごとに選び直す（多くの形を少しずつ使うため）。
 """
 
 from __future__ import annotations
@@ -25,19 +29,42 @@ from pathlib import Path
 REPO = Path(__file__).resolve().parents[3]
 
 
+def _quiet_libraries() -> None:
+    """動画書き込み（ffmpeg）と datasets の進捗表示を止め、ログを読みやすくする."""
+    import av.logging
+    import datasets
+
+    av.logging.set_level(av.logging.ERROR)
+    datasets.disable_progress_bars()
+
+
 def _generate_shard(job: dict) -> dict:
     import numpy as np
     from lerobot.datasets.lerobot_dataset import LeRobotDataset
 
     from so101_food.datagen.schema import ROBOT_TYPE, dataset_features, to_dataset_units
     from so101_food.env.cameras import CameraRig
-    from so101_food.env.pot_task import CONTROL_HZ, TASK_DESCRIPTION, PotTaskEnv
+    from so101_food.env.factory import make_env
+    from so101_food.env.pot_task import CONTROL_HZ, TASK_DESCRIPTION
+    from so101_food.env.spec import TaskSpec
     from so101_food.expert.pot_expert import PotExpert, run_expert_episode
 
+    _quiet_libraries()
     t0 = time.time()
-    env = PotTaskEnv()
-    expert = PotExpert(env)
-    rig = CameraRig(env.model)
+    spec = TaskSpec(**job["task"])
+    env = rig = None
+
+    def rebuild(count: int):
+        nonlocal env, rig
+        if rig is not None:
+            rig.close()
+            env.close()
+        # 食材片の選び方もワーカーと作り直しの回数から決まるので、生成は再現できる
+        env = make_env(spec, np.random.default_rng([job["seed_start"], count]))
+        rig = CameraRig(env.model)
+        return PotExpert(env)
+
+    expert = rebuild(0)
     ds = LeRobotDataset.create(
         repo_id=job["repo_id"],
         fps=CONTROL_HZ,
@@ -52,6 +79,8 @@ def _generate_shard(job: dict) -> dict:
     episodes = []
     k = 0
     while len(episodes) < job["quota"] and k < job["max_attempts"]:
+        if spec.task == "pieces" and k > 0 and k % job["rebuild_every"] == 0:
+            expert = rebuild(k // job["rebuild_every"])
         seed = job["seed_start"] + k * job["seed_stride"]
         k += 1
         rec = run_expert_episode(env, expert, seed)
@@ -72,6 +101,7 @@ def _generate_shard(job: dict) -> dict:
         episodes.append(
             {
                 "seed": seed,
+                "object": rec.info["target_object"],
                 "n_frames": rec.n_frames,
                 "obj_pose0": np.round(rec.obj_pose0, 4).tolist(),
             }
@@ -96,6 +126,7 @@ def _generate_shard(job: dict) -> dict:
 
 
 def main(argv: list[str] | None = None) -> None:
+    from so101_food.env.spec import TASKS, TaskSpec
     from so101_food.utils.parallel import default_workers, prepare_workers, run_parallel
 
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawTextHelpFormatter)
@@ -111,7 +142,14 @@ def main(argv: list[str] | None = None) -> None:
         help="シャードの一時保存先（ローカルディスク推奨）",
     )
     ap.add_argument("--overwrite", action="store_true", help="同名のデータセットを消して作り直す")
+    ap.add_argument("--task", choices=TASKS, default="cube", help="cube（段階1）/ pieces（段階2）")
+    ap.add_argument(
+        "--piece-set", default="carrot_train", help="食材片の形状セット（pieces のとき）"
+    )
+    ap.add_argument("--pool-size", type=int, default=20, help="1 つの環境に入れる食材片の数")
+    ap.add_argument("--rebuild-every", type=int, default=10, help="食材片を選び直す試行回数の間隔")
     args = ap.parse_args(argv)
+    task = TaskSpec(task=args.task, piece_set=args.piece_set, pool_size=args.pool_size)
 
     out = args.out_dir / args.name
     if out.exists():
@@ -134,6 +172,8 @@ def main(argv: list[str] | None = None) -> None:
             # ワーカー w の k 回目の試行は seed = seed + w + k * workers（全体で重複しない）
             "seed_start": args.seed + w,
             "seed_stride": workers,
+            "task": task.to_dict(),
+            "rebuild_every": args.rebuild_every,
             "repo_id": f"local/{args.name}_shard{w:03d}",
             "root": str(work / f"shard{w:03d}"),
         }
@@ -165,6 +205,7 @@ def main(argv: list[str] | None = None) -> None:
     n_success = sum(len(r["episodes"]) for r in results)
     stats = {
         "dataset": f"local/{args.name}",
+        "task": task.to_dict(),
         "episodes": n_success,
         "frames": sum(e["n_frames"] for r in results for e in r["episodes"]),
         "expert_attempts": attempts,

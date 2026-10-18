@@ -1,8 +1,8 @@
 """小片を掴んで鍋に入れるスクリプテッド・エキスパート.
 
-シミュレータから小片の真の姿勢を読み、関節空間の経由点を IK で求めて補間する。
+シミュレータから小片の真の形状（頂点）と姿勢を読み、関節空間の経由点を IK で求めて補間する。
 
-1. 上空へ移動しながら指を開く（真上把持）
+1. 上空へ移動しながら指を開く（真上把持。上から見て一番細い方向で挟む）
 2. 下降して小片の中心の高さに TCP を合わせる
 3. 指を閉じる
 4. 持ち上げる
@@ -21,8 +21,10 @@ from dataclasses import dataclass, field
 import numpy as np
 
 from so101_food.env.pot_task import CONTROL_HZ, FRAME_SKIP, PotTaskEnv, failure_reason
+from so101_food.expert.grasp_plan import plan_top_down_grasp
 from so101_food.expert.ik import TopDownIK
-from so101_food.expert.trajectory import Segment, iter_actions, yaw_from_quat
+from so101_food.expert.trajectory import Segment, iter_actions
+from so101_food.sim.gripper import angle_for_gap, measure_gripper
 
 DEFAULT_DURATIONS = {  # 各区間の長さ [秒]
     "approach": 1.2,
@@ -39,7 +41,14 @@ DEFAULT_DURATIONS = {  # 各区間の長さ [秒]
 @dataclass(frozen=True)
 class ExpertParams:
     open_deg: float = 35.0  # 開いたときのグリッパ角度（パッド間 約 57mm）
-    close_deg: float = -10.0  # 閉じる目標（小片に当たって止まり、握る力になる）
+    # 離すときは大きく開く。小片が指に引っかかったまま離れないことがあるため（パッド間 約 87mm）
+    release_deg: float = 70.0
+    max_grasp_width: float = 0.045  # これより幅の広い向きしかない小片は掴まない
+    close_deg: float = -10.0  # 閉じる目標の下限（完全に閉じた角度）
+    # 閉じる目標は「パッド間が小片の幅よりこれだけ狭い角度」にする。目標と実際の差が握る力に
+    # なるので、完全に閉じる目標だと力が強すぎ、小片が指先の小さな当たり判定に食い込んで
+    # 離せなくなる。None なら常に close_deg まで閉じる
+    squeeze_mm: float | None = 10.0
     approach_height: tuple[float, float] = (0.05, 0.07)  # 小片の上空の高さ（一様乱数の範囲）
     lift_height: float = 0.07  # 持ち上げ後の TCP の高さ（小片の中心から）
     carry_clearance: tuple[float, float] = (0.06, 0.08)  # 鍋の縁から TCP までの高さ
@@ -62,21 +71,23 @@ class PotExpert:
         self.grasp_ik = TopDownIK(env.model)
         # 鍋の上では位置を優先し、姿勢は「なるべく下向き」程度にする
         self.carry_ik = TopDownIK(env.model, rot_weight=0.02)
+        self.gripper = measure_gripper(env.model)
 
     def plan(self, rng: np.random.Generator) -> Plan:
         """現在の状態（reset 直後）から、エピソード全体の区間列を作る."""
         p, env = self.params, self.env
         q0 = env.robot_qpos()
-        pose = env.object_pose()
-        obj_pos, obj_yaw = pose[:3], yaw_from_quat(pose[3:])
+        # 小片の頂点から、上から見て一番細い方向で挟む把持点を求める（形・大きさによらない）
+        target = plan_top_down_grasp(env.target_vertices())
+        at = target.center
 
-        grasp = self.grasp_ik.solve_best_yaw(obj_pos, [obj_yaw, obj_yaw + np.pi / 2])
+        grasp = self.grasp_ik.solve_best_yaw(at, list(target.yaw_candidates))
         # 真上姿勢がとれる高さはベースからの距離で変わるので、解けなければ上空の高さを下げる
         for height in (rng.uniform(*p.approach_height), 0.05, 0.04, 0.03):
-            pre = self.grasp_ik.solve(obj_pos + [0.0, 0.0, height], grasp.yaw, grasp.q)
+            pre = self.grasp_ik.solve(at + [0.0, 0.0, height], grasp.yaw, grasp.q)
             if pre.ok():
                 break
-        lift = self.grasp_ik.solve(obj_pos + [0.0, 0.0, p.lift_height], grasp.yaw, grasp.q)
+        lift = self.grasp_ik.solve(at + [0.0, 0.0, p.lift_height], grasp.yaw, grasp.q)
         cx, cy = env.pot.center
         drop = np.array(
             [
@@ -86,16 +97,21 @@ class PotExpert:
             ]
         )
         carry = self.carry_ik.solve(drop, grasp.yaw, lift.q)
-        ik_ok = grasp.ok() and pre.ok() and carry.pos_err_m < 0.005
+        fits = target.width < p.max_grasp_width
+        ik_ok = fits and grasp.ok() and pre.ok() and carry.pos_err_m < 0.005
 
         g_open, g_close = np.radians(p.open_deg), np.radians(p.close_deg)
+        if p.squeeze_mm is not None:
+            gap = max(target.width * 1e3 - p.squeeze_mm, self.gripper[0].pad_gap_mm)
+            g_close = max(g_close, np.radians(angle_for_gap(self.gripper, gap)))
+        g_release = np.radians(p.release_deg)
         targets = [
             ("approach", pre.q, g_open),
             ("descend", grasp.q, g_open),
             ("close", grasp.q, g_close),
             ("lift", lift.q, g_close),
             ("carry", carry.q, g_close),
-            ("release", carry.q, g_open),
+            ("release", carry.q, g_release),
             ("home", q0[:5], q0[5]),
             ("settle", q0[:5], q0[5]),
         ]

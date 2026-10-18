@@ -3,6 +3,8 @@
     python -m so101_food.eval.evaluate \\
         --policy outputs/train/act_pot_cube_v1/checkpoints/last/pretrained_model \\
         --name act_pot_cube_v1 --episodes 50 --workers 25
+    # 段階2: 学習で見せていない形の食材片で評価する
+    python -m so101_food.eval.evaluate --policy ... --name ... --task pieces --piece-set carrot_test
 
 ポリシーの入力は学習データと同じ（俯瞰・手首カメラ画像と 6 関節の角度）で、
 物体の真の位置は使わない。各エピソードの結果を次のように分類する。
@@ -22,6 +24,7 @@ import csv
 import json
 import time
 from collections import Counter
+from dataclasses import replace
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[3]
@@ -51,29 +54,27 @@ def _evaluate_chunk(job: dict) -> list[dict]:
     import torch
 
     torch.set_num_threads(job["torch_threads"])
-    from so101_nexus import CubeObject
-
     from so101_food.datagen.schema import from_dataset_units, to_dataset_units
     from so101_food.env.cameras import CameraRig
-    from so101_food.env.pot_task import (
-        FRAME_SKIP,
-        TASK_DESCRIPTION,
-        PotTaskEnv,
-        default_pick_config,
-        failure_reason,
-    )
+    from so101_food.env.factory import make_env
+    from so101_food.env.pot_task import FRAME_SKIP, TASK_DESCRIPTION, failure_reason
+    from so101_food.env.spec import TaskSpec
     from so101_food.utils.render import save_mp4
 
     policy, pre, post = _load_policy(job["policy"], job["n_action_steps"], job["temporal_ensemble"])
-    config = default_pick_config(
-        objects=CubeObject(side_length_mm=job["cube_mm"], color="orange"),
-        spawn_radius=job["spawn_radius"],
-    )
-    env = PotTaskEnv(config=config)
-    rig = CameraRig(env.model)
-    low, high = env.action_space.low, env.action_space.high
+    spec = TaskSpec(**job["task"])
+    env = rig = None
     results = []
     for index, seed in job["episodes"]:
+        # 食材片はエピソードごとに 1 個選んで環境を作る（どの片になるかはエピソード番号だけで
+        # 決まるので、並列数を変えても同じ条件で評価できる）
+        if env is None or spec.task == "pieces":
+            if rig is not None:
+                rig.close()
+                env.close()
+            env = make_env(replace(spec, pool_size=1), np.random.default_rng([job["seed"], index]))
+            rig = CameraRig(env.model)
+            low, high = env.action_space.low, env.action_space.high
         t0 = time.time()
         env.reset(seed=seed)
         policy.reset()
@@ -109,6 +110,7 @@ def _evaluate_chunk(job: dict) -> list[dict]:
         result = {
             "episode": index,
             "seed": seed,
+            "object": info["target_object"],
             "success": reason == "success",
             "reason": reason,
             "steps": step,
@@ -129,6 +131,7 @@ def _evaluate_chunk(job: dict) -> list[dict]:
 
 
 def main(argv: list[str] | None = None) -> None:
+    from so101_food.env.spec import TASKS, TaskSpec
     from so101_food.utils.parallel import default_workers, prepare_workers, run_parallel
 
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawTextHelpFormatter)
@@ -144,6 +147,12 @@ def main(argv: list[str] | None = None) -> None:
         "--max-steps", type=int, default=260, help="1 エピソードの上限（25Hz、既定 10.4 秒）"
     )
     ap.add_argument("--settle-steps", type=int, default=25, help="鍋に入ってから打ち切るまで")
+    ap.add_argument("--task", choices=TASKS, default="cube", help="cube（段階1）/ pieces（段階2）")
+    ap.add_argument(
+        "--piece-set",
+        default="carrot_test",
+        help="食材片の形状セット（既定は学習で見せていない形）",
+    )
     ap.add_argument("--cube-mm", type=float, default=25.0, help="立方体の 1 辺（分布外評価用）")
     ap.add_argument(
         "--spawn-radius", type=float, default=0.07, help="配置範囲の半径（分布外評価用）"
@@ -155,6 +164,13 @@ def main(argv: list[str] | None = None) -> None:
     ap.add_argument("--torch-threads", type=int, default=1)
     ap.add_argument("--out-dir", type=Path, default=REPO / "outputs" / "eval")
     args = ap.parse_args(argv)
+    task = TaskSpec(
+        task=args.task,
+        cube_mm=args.cube_mm,
+        piece_set=args.piece_set,
+        pool_size=1,  # 評価ではエピソードごとに 1 個選ぶ
+        spawn_radius=args.spawn_radius,
+    )
 
     out = args.out_dir / args.name
     out.mkdir(parents=True, exist_ok=True)
@@ -170,8 +186,8 @@ def main(argv: list[str] | None = None) -> None:
             "videos": args.videos,
             "max_steps": args.max_steps,
             "settle_steps": args.settle_steps,
-            "cube_mm": args.cube_mm,
-            "spawn_radius": args.spawn_radius,
+            "task": task.to_dict(),
+            "seed": args.seed,
             "n_action_steps": args.n_action_steps,
             "temporal_ensemble": args.temporal_ensemble,
             "torch_threads": args.torch_threads,
@@ -198,11 +214,11 @@ def main(argv: list[str] | None = None) -> None:
         "mean_steps_success": (
             round(sum(r["steps"] for r in successes) / len(successes), 1) if successes else None
         ),
+        "task": task.to_dict(),
         "settings": {
             k: getattr(args, k)
-            for k in ("seed", "max_steps", "cube_mm", "spawn_radius", "n_action_steps")
-        }
-        | {"temporal_ensemble": args.temporal_ensemble},
+            for k in ("seed", "max_steps", "n_action_steps", "temporal_ensemble")
+        },
         "elapsed_s": round(time.time() - t0, 1),
     }
     (out / "summary.json").write_text(json.dumps(summary, ensure_ascii=False, indent=2))

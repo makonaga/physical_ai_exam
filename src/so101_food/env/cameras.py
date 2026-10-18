@@ -26,7 +26,9 @@ class CameraRig:
     def render(self, qpos: np.ndarray) -> dict[str, np.ndarray]:
         """全関節の ``qpos``（``model.nq`` 次元）の状態で各カメラを描画する（HWC, uint8）."""
         self.data.qpos[:] = qpos
-        mujoco.mj_forward(self.model, self.data)
+        # 描画に必要な位置（物体・カメラ・照明）だけ計算する（接触計算は不要）
+        mujoco.mj_kinematics(self.model, self.data)
+        mujoco.mj_camlight(self.model, self.data)
         images = {}
         for key, cam_id in self.camera_ids.items():
             self.renderer.update_scene(self.data, camera=cam_id)

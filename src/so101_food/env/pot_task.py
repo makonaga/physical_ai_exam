@@ -15,7 +15,7 @@ from dataclasses import dataclass
 
 import mujoco
 import numpy as np
-from so101_nexus import CubeObject, PickConfig, RenderConfig
+from so101_nexus import CubeObject, MeshObject, PickConfig, RenderConfig
 from so101_nexus.constants import sample_color
 from so101_nexus.mujoco.pick_env import PickEnv
 from so101_nexus.object_slots import compile_object_scene
@@ -36,6 +36,13 @@ CONTROL_HZ = 25  # ポリシー・データセットの周期
 FRAME_SKIP = PHYSICS_HZ // CONTROL_HZ
 TASK_DESCRIPTION = "Put the food piece into the pot."
 POT_RGBA = "0.55 0.57 0.62 1"  # 金属っぽい灰色
+# 食材片の基本色（RGB）。エピソードごとに明るさ・色味を少し揺らす
+FOOD_RGB = {
+    "carrot": (0.93, 0.45, 0.10),
+    "potato": (0.80, 0.68, 0.40),
+    "daikon": (0.93, 0.93, 0.88),
+}
+COLOR_JITTER = 0.08
 
 
 @dataclass(frozen=True)
@@ -185,10 +192,41 @@ class PotTaskEnv(PickEnv):
         """対象の小片の姿勢 ``[x, y, z, qw, qx, qy, qz]``."""
         return self._get_target_pose()
 
+    def target_vertices(self) -> np.ndarray:
+        """対象の小片の衝突形状の頂点（世界座標、(N, 3)）. 把持計画に使う."""
+        verts = []
+        for gid in self._slots[self._target_slot_idx].geom_ids:
+            pos = self.data.geom_xpos[gid]
+            rot = self.data.geom_xmat[gid].reshape(3, 3)
+            if self.model.geom_type[gid] == mujoco.mjtGeom.mjGEOM_BOX:
+                half = self.model.geom_size[gid]
+                local = np.array(np.meshgrid(*[[-h, h] for h in half])).reshape(3, -1).T
+            elif self.model.geom_type[gid] == mujoco.mjtGeom.mjGEOM_MESH:
+                mid = self.model.geom_dataid[gid]
+                adr, num = self.model.mesh_vertadr[mid], self.model.mesh_vertnum[mid]
+                local = self.model.mesh_vert[adr : adr + num]
+            else:
+                raise NotImplementedError(f"geom type {self.model.geom_type[gid]}")
+            verts.append(local @ rot.T + pos)
+        return np.vstack(verts)
+
     def _task_reset(self) -> None:
+        # so101-nexus は使わない片を同じ場所（地下）に重ねて置き、次の reset の途中で一時的に
+        # 接触を有効に戻す。片が多いと重なった片どうしの接触が爆発的に増えて MuJoCo が
+        # メモリ不足で止まるため、reset の前に待機中の片を上空に離して並べておく
+        for i, slot in enumerate(self._slots):
+            self.data.qpos[slot.qpos_addr : slot.qpos_addr + 3] = [10.0 + 0.5 * i, 0.0, 5.0]
         super()._task_reset()
         self._max_lift = 0.0
         self._ever_grasped = False
+        target = self._slots[self._target_slot_idx]
+        if isinstance(target.obj, MeshObject):
+            # 食材片の表示用ジオムの色を、食材の基本色から少しずらして塗る
+            food = target.obj.name.split()[0]
+            rgb = np.array(FOOD_RGB.get(food, (0.7, 0.7, 0.7)))
+            rgb = rgb * self.np_random.uniform(1 - COLOR_JITTER, 1 + COLOR_JITTER, size=3)
+            visual = self.model.geom(f"pick_slot_{self._target_slot_idx}_visual").id
+            self.model.geom_rgba[visual] = [*np.clip(rgb, 0, 1), 1.0]
 
     def _get_info(self) -> dict:
         info = super()._get_info()

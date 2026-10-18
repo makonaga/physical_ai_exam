@@ -43,7 +43,8 @@ def measure_gripper(
     samples = []
     for deg in angles_deg:
         data.qpos[joint.qposadr[0]] = np.radians(deg)
-        mujoco.mj_forward(model, data)
+        # 位置の計算だけ行う（接触計算は不要。シーンに物体が多いと重なって重くなる）
+        mujoco.mj_kinematics(model, data)
         tip_gap = np.linalg.norm(data.geom_xpos[tip_f] - data.geom_xpos[tip_m])
         pad_gap = min(mujoco.mj_geomDistance(model, data, a, b, 0.5, None) for a, b in pairs)
         samples.append(GripperSample(float(deg), float(tip_gap * 1e3), float(pad_gap * 1e3)))
