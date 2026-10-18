@@ -15,6 +15,7 @@ dist/
 # 生成物（データセット・学習結果・動画）は Git に含めない
 data/
 outputs/
+logs/
 wandb/
 *.mp4
 
