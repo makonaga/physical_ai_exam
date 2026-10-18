@@ -1,0 +1,28 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+.venvs/
+build/
+dist/
+.pytest_cache/
+.ruff_cache/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# 生成物（データセット・学習結果・動画）は Git に含めない
+data/
+outputs/
+wandb/
+*.mp4
+
+# エディタ・OS
+.vscode/
+.idea/
+.DS_Store
+
+# 認証情報
+.env
+*.pem
