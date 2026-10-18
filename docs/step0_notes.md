@@ -1,8 +1,8 @@
 # 段階0 メモ：環境確認と計測結果
 
-`notebooks/00_env_check.ipynb` の内容を、開発用の CPU 環境（GPU なし、4 コア）で実行して得た結果。
-物理・幾何の値（グリッパ寸法、作業領域、把持テスト）は実行環境によらない。描画速度は環境によって変わるので、
-SageMaker での実行結果で更新する。
+`notebooks/00_env_check.ipynb` を、開発用の CPU 環境（GPU なし、4 コア）と SageMaker Studio
+（`ml.g5.xlarge`、NVIDIA A10G、ドライバ 595.91.07、PyTorch cu130）で実行した結果。
+物理・幾何の値（グリッパ寸法、作業領域、把持テスト）はどちらでも同じ値になった。
 
 ## ソフトウェア
 
@@ -51,14 +51,17 @@ SageMaker での実行結果で更新する。
 
 ## 描画
 
-| 条件 | 1 ステップあたり |
-|---|---|
-| 物理のみ（カメラなし） | 0.3 ms |
-| CPU 描画、2 カメラ 224px、高速設定（MSAA なし・影なし） | 77 ms |
-| CPU 描画、2 カメラ 224px、so101-nexus 既定（MSAA 8x・影 8192px） | 511 ms |
+| 条件 | 開発環境 | SageMaker（g5.xlarge） |
+|---|---|---|
+| 物理のみ（カメラなし） | 0.3 ms | 0.4 ms |
+| CPU 描画、2 カメラ 224px、高速設定（MSAA なし・影なし） | 77 ms | 82 ms |
+| CPU 描画、2 カメラ 224px、so101-nexus 既定（MSAA 8x・影 8192px） | 511 ms | 未計測 |
 
-- NVIDIA の EGL が見えない環境では、`MUJOCO_GL=egl` でも Mesa のソフトウェア描画（llvmpipe）で動く。
-  `so101_food.utils.gl.select_gl_backend()` は GL_RENDERER を見て GPU 描画かどうかを判定し、CPU 描画なら高速設定を使う。
+- **SageMaker の GPU インスタンスでも、MuJoCo の描画は GPU を使えなかった**。CUDA（PyTorch）は A10G を使えるが、
+  コンテナに NVIDIA の EGL ライブラリが見えておらず、`MUJOCO_GL=egl` は Mesa のソフトウェア描画（llvmpipe）で動く。
+  学習は GPU、シミュレーションの描画は CPU という分担になる。
+- `so101_food.utils.gl.select_gl_backend()` は GL_RENDERER を見て GPU 描画かどうかを判定し、CPU 描画なら高速設定を使う。
+- 高速設定で 82 ms/step なので、成功 300 エピソード × 250 ステップの描画は約 100 分、評価 50 エピソードは約 20 分の見込み。
 - 物理計算は描画より 2 桁以上速い。段階1のデータ生成は「エキスパートを描画なしで実行 → 成功したエピソードの
   状態列だけを描画し直す」構成にして、失敗エピソードの描画を省く。
 - 学習データと評価で描画品質を変えるとポリシーにとって分布外になるため、データ生成用の品質は段階1で固定する。
