@@ -3,15 +3,19 @@
     python -m so101_food.eval.evaluate \\
         --policy outputs/train/act_pot_cube_v1/checkpoints/last/pretrained_model \\
         --name act_pot_cube_v1 --episodes 50 --workers 25
-    # 段階2: 学習で見せていない形の食材片で評価する
-    python -m so101_food.eval.evaluate --policy ... --name ... --task pieces --piece-set carrot_test
+    # 段階2: 複数の食材片（学習で見せていない形）から一番近い片を鍋に入れる
+    python -m so101_food.eval.evaluate --policy ... --name ... --task multi --piece-set carrot_test
 
 ポリシーの入力は学習データと同じ（俯瞰・手首カメラ画像と 6 関節の角度）で、
 物体の真の位置は使わない。各エピソードの結果を次のように分類する。
 
-- ``success``     : 小片が鍋の中に入った
-- ``not_grasped`` : 小片を持ち上げられなかった
+- ``success``     : 対象の小片（複数片のときはロボットに一番近い片）が鍋の中に入った
+- ``wrong_piece`` : 対象ではない片を鍋に入れた・持ち上げた（複数片のとき）
+- ``not_grasped`` : 対象の小片を持ち上げられなかった
 - ``missed_pot``  : 持ち上げたが鍋に入らなかった（運搬中の落下・鍋の外に落とした）
+
+複数片のときの配置は、学習データと同じく「エキスパートなら他の片に指を当てずに掴める」
+ものだけを使う（エキスパートは配置の確認にだけ使い、ロボットは動かさない）。
 
 結果は ``outputs/eval/<name>/`` に ``summary.json``・``episodes.csv``・動画として保存する。
 学習データの seed（0 から数百）と重ならないよう、評価の seed は 100000 から始める。
@@ -57,8 +61,9 @@ def _evaluate_chunk(job: dict) -> list[dict]:
     from so101_food.datagen.schema import from_dataset_units, to_dataset_units
     from so101_food.env.cameras import CameraRig
     from so101_food.env.factory import make_env
-    from so101_food.env.pot_task import FRAME_SKIP, TASK_DESCRIPTION, failure_reason
+    from so101_food.env.pot_task import FRAME_SKIP, failure_reason
     from so101_food.env.spec import TaskSpec
+    from so101_food.expert.pot_expert import PotExpert
     from so101_food.utils.render import save_mp4
 
     policy, pre, post = _load_policy(job["policy"], job["n_action_steps"], job["temporal_ensemble"])
@@ -66,13 +71,14 @@ def _evaluate_chunk(job: dict) -> list[dict]:
     env = rig = None
     results = []
     for index, seed in job["episodes"]:
-        # 食材片はエピソードごとに 1 個選んで環境を作る（どの片になるかはエピソード番号だけで
+        # 食材片はエピソードごとに選んで環境を作る（どの片になるかはエピソード番号だけで
         # 決まるので、並列数を変えても同じ条件で評価できる）
-        if env is None or spec.task == "pieces":
+        if env is None or spec.task != "cube":
             if rig is not None:
                 rig.close()
                 env.close()
             env = make_env(replace(spec, pool_size=1), np.random.default_rng([job["seed"], index]))
+            env.scene_check = PotExpert(env).can_grasp
             rig = CameraRig(env.model)
             low, high = env.action_space.low, env.action_space.high
         t0 = time.time()
@@ -88,7 +94,7 @@ def _evaluate_chunk(job: dict) -> list[dict]:
                 frames.append(np.concatenate([images["overhead"], images["wrist"]], axis=1))
             obs = {
                 "observation.state": torch.from_numpy(to_dataset_units(env.robot_qpos()))[None],
-                "task": [TASK_DESCRIPTION],
+                "task": [env.task_description],
             }
             for key, img in images.items():
                 obs[f"observation.images.{key}"] = (
@@ -111,6 +117,7 @@ def _evaluate_chunk(job: dict) -> list[dict]:
             "episode": index,
             "seed": seed,
             "object": info["target_object"],
+            "n_pieces": int(info["n_pieces"]),
             "success": reason == "success",
             "reason": reason,
             "steps": step,
@@ -130,6 +137,21 @@ def _evaluate_chunk(job: dict) -> list[dict]:
     return results
 
 
+def _success_by_count(results: list[dict], width: int = 5) -> dict:
+    """机の上の片の数（5 個ずつの区間）ごとの成功率. キーは区間に入った片の数の最小〜最大."""
+    groups: dict[int, list[dict]] = {}
+    for r in results:
+        groups.setdefault(r["n_pieces"] // width, []).append(r)
+    out = {}
+    for _, group in sorted(groups.items()):
+        counts = [r["n_pieces"] for r in group]
+        out[f"{min(counts)}-{max(counts)}"] = {
+            "episodes": len(group),
+            "success_rate": round(sum(r["success"] for r in group) / len(group), 4),
+        }
+    return out
+
+
 def main(argv: list[str] | None = None) -> None:
     from so101_food.env.spec import TASKS, TaskSpec
     from so101_food.utils.parallel import default_workers, prepare_workers, run_parallel
@@ -147,7 +169,12 @@ def main(argv: list[str] | None = None) -> None:
         "--max-steps", type=int, default=260, help="1 エピソードの上限（25Hz、既定 10.4 秒）"
     )
     ap.add_argument("--settle-steps", type=int, default=25, help="鍋に入ってから打ち切るまで")
-    ap.add_argument("--task", choices=TASKS, default="cube", help="cube（段階1）/ pieces（段階2）")
+    ap.add_argument(
+        "--task",
+        choices=TASKS,
+        default="cube",
+        help="cube（段階1）/ pieces（食材片 1 個）/ multi（段階2: 複数の食材片）",
+    )
     ap.add_argument(
         "--piece-set",
         default="carrot_test",
@@ -157,6 +184,8 @@ def main(argv: list[str] | None = None) -> None:
     ap.add_argument(
         "--spawn-radius", type=float, default=0.07, help="配置範囲の半径（分布外評価用）"
     )
+    ap.add_argument("--min-pieces", type=int, default=5, help="multi で机に置く片の数の下限")
+    ap.add_argument("--max-pieces", type=int, default=20, help="multi で机に置く片の数の上限")
     ap.add_argument("--n-action-steps", type=int, default=None, help="行動チャンクのうち実行する数")
     ap.add_argument(
         "--temporal-ensemble", type=float, default=None, help="ACT の時間的アンサンブル係数"
@@ -168,8 +197,10 @@ def main(argv: list[str] | None = None) -> None:
         task=args.task,
         cube_mm=args.cube_mm,
         piece_set=args.piece_set,
-        pool_size=1,  # 評価ではエピソードごとに 1 個選ぶ
+        pool_size=1,  # 評価ではエピソードごとに選ぶ（multi では max_pieces 個）
         spawn_radius=args.spawn_radius,
+        min_pieces=args.min_pieces,
+        max_pieces=args.max_pieces,
     )
 
     out = args.out_dir / args.name
@@ -214,6 +245,7 @@ def main(argv: list[str] | None = None) -> None:
         "mean_steps_success": (
             round(sum(r["steps"] for r in successes) / len(successes), 1) if successes else None
         ),
+        "by_n_pieces": _success_by_count(results) if task.task == "multi" else None,
         "task": task.to_dict(),
         "settings": {
             k: getattr(args, k)

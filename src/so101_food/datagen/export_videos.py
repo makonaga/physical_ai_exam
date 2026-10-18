@@ -1,14 +1,14 @@
 """生成したデータセットの中身を、見やすい動画に書き出す.
 
-    python -m so101_food.datagen.export_videos --dataset pot_pieces_v1
+    python -m so101_food.datagen.export_videos --dataset pot_multi_v1
 
 LeRobot のデータセットでは、全エピソードの映像がカメラごとに 1 本につながった AV1 の動画に
 なっていて、そのままだと見にくい（ブラウザによっては再生もできない）。そこで次を書き出す。
 
-- ``ep<番号>_<物体名>.mp4``: エピソード 1 本ずつ。左が俯瞰カメラ、右が手首カメラ
-- ``grid_<N>.mp4``: N 本のエピソードの俯瞰カメラを格子状に並べて同時に流す（形のばらつきの確認用）
+- ``ep<番号>_<物体名 or 片の数>.mp4``: エピソード 1 本ずつ。左が俯瞰カメラ、右が手首カメラ
+- ``grid_<N>.mp4``: N 本のエピソードの俯瞰カメラを格子状に並べて同時に流す（ばらつきの確認用）
 
-どちらも H.264 で、画面左上にエピソード番号・物体名・経過時間を入れる。
+どちらも H.264 で、画面左上にエピソード番号・物体名（複数片のときは片の数）・経過時間を入れる。
 出力先は ``outputs/dataset_videos/<データセット名>/``。
 """
 
@@ -52,7 +52,13 @@ def _episode_frames(ds, episode: int) -> dict[str, list[np.ndarray]]:
 
 
 def _short_name(meta: dict) -> str:
-    """episodes_meta.jsonl の物体名（例: "carrot piece carrot_0042"）から短い名前を作る."""
+    """episodes_meta.jsonl から表示用の短い名前を作る.
+
+    複数片のときは片の数（例: "12pieces"）、1 個のときは物体名（"carrot piece carrot_0042" →
+    "carrot_0042"）。
+    """
+    if meta.get("n_pieces", 1) > 1:
+        return f"{meta['n_pieces']}pieces"
     return meta.get("object", "cube").split()[-1]
 
 

@@ -16,6 +16,8 @@
 
 最後に、机に置いたときに安定する向き（安定姿勢）に回し、外接箱の一番薄い軸が鉛直
 になるようにそろえる（so101-nexus は外接箱の一番薄い軸を上にして置くため）。
+安定姿勢でも、重心が接地面の端に近いとシミュレーションの中で転がり出すことがあるので、
+重心が接地面の端から ``min_support_margin`` 以上内側にある向きだけを使う。
 """
 
 from __future__ import annotations
@@ -36,6 +38,9 @@ class PieceSpec:
     min_width: float = 0.015  # 最小の厚み [m]
     max_extent: float = 0.035  # 最大の寸法 [m]
     cut_offset: tuple[float, float] = (0.008, 0.016)  # 中心から切断面までの距離 [m]
+    # 重心（を真下に下ろした点）から接地面の端までの距離の下限 [m]。これより端に近いと、
+    # 置いた直後に転がったり回ったりする（約 2mm 以下の片の 9 割で起きた）
+    min_support_margin: float = 0.0035
 
 
 @dataclass(frozen=True)
@@ -130,12 +135,31 @@ def min_width(vertices: np.ndarray, n_dirs: int = 400) -> float:
     return float((proj.max(axis=0) - proj.min(axis=0)).min())
 
 
-def _rest_pose(mesh: trimesh.Trimesh) -> trimesh.Trimesh | None:
+def support_margin(mesh: trimesh.Trimesh, tol: float = 0.0005) -> float:
+    """置いた向き（z が上）で、重心を真下に下ろした点から接地面の端までの距離 [m].
+
+    接地面は一番低い頂点から ``tol`` 以内の頂点の凸包。重心が接地面の外なら負の値。
+    """
+    v = mesh.vertices
+    support = v[v[:, 2] < v[:, 2].min() + tol][:, :2]
+    if len(support) < 3:
+        return -np.inf
+    try:
+        hull = ConvexHull(support)
+    except Exception:  # noqa: BLE001  一直線に並んだ（接地面が線）
+        return -np.inf
+    # hull.equations は外向き法線 n と d で n·x + d <= 0 が内側。距離は -(n·c + d)
+    return float(-(hull.equations[:, :2] @ mesh.center_mass[:2] + hull.equations[:, 2]).max())
+
+
+def _rest_pose(mesh: trimesh.Trimesh, min_margin: float = 0.0) -> trimesh.Trimesh | None:
     """安定姿勢のうち、外接箱で鉛直が一番薄くなる向きを選んで返す（なければ None）."""
     transforms, probs = trimesh.poses.compute_stable_poses(mesh, n_samples=1)
     for T in transforms[np.argsort(-probs)][:4]:
         posed = mesh.copy()
         posed.apply_transform(T)
+        if support_margin(posed) < min_margin:
+            continue
         # 鉛直軸まわりに回して、上から見た外接長方形を最小にする
         xy = posed.vertices[:, :2]
         best = None
@@ -172,7 +196,7 @@ def make_piece(
             continue
         if min_width(mesh.vertices) < spec.min_width or mesh.extents.max() > spec.max_extent:
             continue
-        posed = _rest_pose(mesh)
+        posed = _rest_pose(mesh, spec.min_support_margin)
         if posed is not None and posed.extents.max() <= spec.max_extent:
             return posed
     raise RuntimeError(f"failed to make a valid {food}/{style} piece in {tries} tries")

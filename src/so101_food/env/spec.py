@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from dataclasses import asdict, dataclass
 
-TASKS = ("cube", "pieces")
+TASKS = ("cube", "pieces", "multi")
 
 
 @dataclass(frozen=True)
@@ -14,6 +14,8 @@ class TaskSpec:
     piece_set: str = "carrot_train"
     pool_size: int = 20
     spawn_radius: float = 0.07
+    min_pieces: int = 5  # multi のとき机に置く片の数（両端を含む）
+    max_pieces: int = 20
 
     def to_dict(self) -> dict:
         return asdict(self)

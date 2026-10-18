@@ -58,3 +58,36 @@ def plan_top_down_grasp(
         height=z_hi - z_lo,
         yaw_candidates=candidates,
     )
+
+
+def grasp_at_yaw(vertices: np.ndarray, yaw: float, min_tcp_height: float = 0.010) -> GraspTarget:
+    """閉じる方向をヨー ``yaw`` に固定したときの把持目標（位置は各方向で形の中央）."""
+    xy = vertices[:, :2]
+    u = np.array([np.cos(yaw), np.sin(yaw)])
+    v = np.array([-u[1], u[0]])
+    pu, pv = xy @ u, xy @ v
+    center_xy = u * (pu.min() + pu.max()) / 2 + v * (pv.min() + pv.max()) / 2
+    z_lo, z_hi = float(vertices[:, 2].min()), float(vertices[:, 2].max())
+    z = max((z_lo + z_hi) / 2, z_lo + min_tcp_height)
+    return GraspTarget(
+        center=np.array([center_xy[0], center_xy[1], z]),
+        yaw=float(yaw),
+        width=float(np.ptp(pu)),
+        height=z_hi - z_lo,
+        yaw_candidates=(float(yaw),),
+    )
+
+
+def grasp_candidates(
+    vertices: np.ndarray, yaw_step_deg: float = 10.0, max_width: float = 0.045
+) -> list[GraspTarget]:
+    """閉じる方向の候補を、幅の狭い順に返す（周りに他の片があるときに使う）.
+
+    一番細い方向（回転キャリパー法）に加えて、0〜180° を ``yaw_step_deg`` ごとに試し、
+    幅が ``max_width`` 以下のものだけを残す。一番細い方向で挟むと指が隣の片に当たる場合は、
+    少し幅が広くても空いている方向から挟む。
+    """
+    best = plan_top_down_grasp(vertices)
+    yaws = [best.yaw, *np.radians(np.arange(0.0, 180.0, yaw_step_deg))]
+    targets = [grasp_at_yaw(vertices, yaw) for yaw in yaws]
+    return sorted((t for t in targets if t.width <= max_width), key=lambda t: t.width)

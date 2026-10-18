@@ -1,7 +1,7 @@
 """成功フィルタ付きの学習データ生成（並列）.
 
     python -m so101_food.datagen.generate --name pot_cube_v1 --episodes 300 --workers 36
-    python -m so101_food.datagen.generate --name pot_pieces_v1 --task pieces --episodes 600
+    python -m so101_food.datagen.generate --name pot_multi_v1 --task multi --episodes 1000
 
 各ワーカーは次を繰り返し、自分の割り当て数だけ成功エピソードを集める。
 
@@ -13,8 +13,10 @@
 （試行数・成功率・失敗の内訳）を ``generation_stats.json`` に書く。
 シャードは一時ディレクトリ（既定: ホーム配下のキャッシュ）に作り、統合後に消す。
 
-``--task pieces``（段階2）では、形状セットから ``--pool-size`` 個の食材片を選んで環境を作り、
-``--rebuild-every`` 回の試行ごとに選び直す（多くの形を少しずつ使うため）。
+``--task pieces`` / ``--task multi``（段階2）では、形状セットから ``--pool-size`` 個の食材片を
+選んで環境を作り、``--rebuild-every`` 回の試行ごとに選び直す（多くの形を少しずつ使うため）。
+``multi`` では各エピソードで ``--min-pieces``〜``--max-pieces`` 個を机に置き、ロボットに
+一番近い片を鍋に入れる。配置はエキスパートが他の片に指を当てずに掴めるものだけを使う。
 """
 
 from __future__ import annotations
@@ -45,7 +47,7 @@ def _generate_shard(job: dict) -> dict:
     from so101_food.datagen.schema import ROBOT_TYPE, dataset_features, to_dataset_units
     from so101_food.env.cameras import CameraRig
     from so101_food.env.factory import make_env
-    from so101_food.env.pot_task import CONTROL_HZ, TASK_DESCRIPTION
+    from so101_food.env.pot_task import CONTROL_HZ
     from so101_food.env.spec import TaskSpec
     from so101_food.expert.pot_expert import PotExpert, run_expert_episode
 
@@ -62,7 +64,10 @@ def _generate_shard(job: dict) -> dict:
         # 食材片の選び方もワーカーと作り直しの回数から決まるので、生成は再現できる
         env = make_env(spec, np.random.default_rng([job["seed_start"], count]))
         rig = CameraRig(env.model)
-        return PotExpert(env)
+        new_expert = PotExpert(env)
+        # 複数片のとき、エキスパートが掴めない配置（指が他の片に当たるなど）は reset で置き直す
+        env.scene_check = new_expert.can_grasp
+        return new_expert
 
     expert = rebuild(0)
     ds = LeRobotDataset.create(
@@ -79,7 +84,7 @@ def _generate_shard(job: dict) -> dict:
     episodes = []
     k = 0
     while len(episodes) < job["quota"] and k < job["max_attempts"]:
-        if spec.task == "pieces" and k > 0 and k % job["rebuild_every"] == 0:
+        if spec.task != "cube" and k > 0 and k % job["rebuild_every"] == 0:
             expert = rebuild(k // job["rebuild_every"])
         seed = job["seed_start"] + k * job["seed_stride"]
         k += 1
@@ -93,7 +98,7 @@ def _generate_shard(job: dict) -> dict:
             frame = {
                 "observation.state": states[t],
                 "action": actions[t],
-                "task": TASK_DESCRIPTION,
+                "task": env.task_description,
             }
             frame.update({f"observation.images.{key}": img for key, img in images.items()})
             ds.add_frame(frame)
@@ -102,6 +107,7 @@ def _generate_shard(job: dict) -> dict:
             {
                 "seed": seed,
                 "object": rec.info["target_object"],
+                "n_pieces": int(rec.info["n_pieces"]),
                 "n_frames": rec.n_frames,
                 "obj_pose0": np.round(rec.obj_pose0, 4).tolist(),
             }
@@ -142,14 +148,33 @@ def main(argv: list[str] | None = None) -> None:
         help="シャードの一時保存先（ローカルディスク推奨）",
     )
     ap.add_argument("--overwrite", action="store_true", help="同名のデータセットを消して作り直す")
-    ap.add_argument("--task", choices=TASKS, default="cube", help="cube（段階1）/ pieces（段階2）")
     ap.add_argument(
-        "--piece-set", default="carrot_train", help="食材片の形状セット（pieces のとき）"
+        "--task",
+        choices=TASKS,
+        default="cube",
+        help="cube（段階1）/ pieces（食材片 1 個）/ multi（段階2: 複数の食材片）",
     )
-    ap.add_argument("--pool-size", type=int, default=20, help="1 つの環境に入れる食材片の数")
+    ap.add_argument(
+        "--piece-set", default="carrot_train", help="食材片の形状セット（pieces / multi のとき）"
+    )
+    ap.add_argument(
+        "--pool-size",
+        type=int,
+        default=None,
+        help="1 つの環境に入れる食材片の数（既定: pieces 20、multi 24）",
+    )
     ap.add_argument("--rebuild-every", type=int, default=10, help="食材片を選び直す試行回数の間隔")
+    ap.add_argument("--min-pieces", type=int, default=5, help="multi で机に置く片の数の下限")
+    ap.add_argument("--max-pieces", type=int, default=20, help="multi で机に置く片の数の上限")
     args = ap.parse_args(argv)
-    task = TaskSpec(task=args.task, piece_set=args.piece_set, pool_size=args.pool_size)
+    pool_size = args.pool_size or (24 if args.task == "multi" else 20)
+    task = TaskSpec(
+        task=args.task,
+        piece_set=args.piece_set,
+        pool_size=pool_size,
+        min_pieces=args.min_pieces,
+        max_pieces=args.max_pieces,
+    )
 
     out = args.out_dir / args.name
     if out.exists():
