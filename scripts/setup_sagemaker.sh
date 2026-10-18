@@ -39,7 +39,9 @@ uv --version
 # ---------------------------------------------------------------- 3. 仮想環境
 log "3/5 仮想環境 $VENV_DIR（Python 3.12）"
 if [ ! -x "$VENV_DIR/bin/python" ]; then
-    uv venv --python 3.12 "$VENV_DIR"
+    # イメージ内蔵の /opt/conda の Python ではなく、uv がホーム配下に入れる Python を使う
+    # （スペースのイメージを更新しても仮想環境が壊れないようにするため）
+    uv venv --python 3.12 --managed-python "$VENV_DIR"
 fi
 
 # ---------------------------------------------------------------- 4. PyTorch の CUDA 版を決めてインストール
