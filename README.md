@@ -17,7 +17,7 @@
 | 2 | 形・大きさがランダムなにんじんの小片を 5〜20 個散らばせ、ロボットに一番近い片を鍋に入れる | 学習・評価まで完了（初めて見る形で成功率 56%。掴む片が遠いと掴み損ねる）。原因を調査中。手順: [docs/step2_howto.md](docs/step2_howto.md)、結果: [docs/step2_results.md](docs/step2_results.md) |
 | 3 | 複数食材（じゃがいも・大根）と言葉による指示、分布外評価、薄切りの失敗デモ | 未着手 |
 | 4 | 動画・レポート・リポジトリ整理 | 未着手 |
-| ― | ACT を VLA（SmolVLA）に置き換える（段階2のデータで学習し、ACT と比較） | 学習まで完了（20,000 ステップ、6 時間 54 分）。評価待ち。結果: [docs/vla_results.md](docs/vla_results.md)。手順: [docs/vla_howto.md](docs/vla_howto.md) |
+| ― | ACT を VLA（SmolVLA）に置き換える（段階2のデータで学習し、ACT と比較） | 学習・評価まで完了（初めて見る形で成功率 40%。ACT は 56%）。改善の検討中。結果: [docs/vla_results.md](docs/vla_results.md)。手順: [docs/vla_howto.md](docs/vla_howto.md) |
 
 ## 次回の作業（VLA の評価）
 

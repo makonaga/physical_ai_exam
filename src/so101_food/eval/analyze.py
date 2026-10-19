@@ -8,6 +8,7 @@
 
 評価に手先の着地位置の記録（``land_*``）があれば、区間ごとに「着地のずれ」（水平距離の平均）と
 「半径方向のずれ」（根元 → 片の向きの平均。負なら片より手前＝根元側）も表示する [mm]。
+結果（成功・掴めず など）ごとの着地のずれの平均も表にする。
 """
 
 from __future__ import annotations
@@ -90,6 +91,26 @@ def summarize_eval(name: str, eval_dir: Path) -> list[str]:
     ]
     if "n_pieces" in rows[0]:
         lines += _table(rows, lambda r: int(r["n_pieces"]), COUNT_EDGES, "片の数", "個", True)
+    if "land_err_mm" in rows[0]:
+        lines += _landing_by_outcome(rows)
+    return lines
+
+
+def _landing_by_outcome(rows: list[dict]) -> list[str]:
+    """結果ごとの、手先の着地位置のずれの平均 [mm]（成功した回と失敗した回でどれだけ違うか）."""
+    lines = ["  結果        回数  着地のずれ  半径方向  横方向"]
+    for reason in REASONS:
+        group = [r for r in rows if r["reason"] == reason]
+        if not group:
+            continue
+
+        def mean(key: str, group=group) -> float:
+            return sum(float(r[key]) for r in group) / len(group)
+
+        lines.append(
+            f"  {REASON_LABELS[reason]:<10} {len(group):>4}   {mean('land_err_mm'):>7.1f}"
+            f"   {mean('land_radial_mm'):>+7.1f}  {mean('land_tangent_mm'):>+7.1f}"
+        )
     return lines
 
 
