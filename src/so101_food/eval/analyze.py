@@ -23,12 +23,13 @@ from pathlib import Path
 REPO = Path(__file__).resolve().parents[3]
 DIST_EDGES_CM = (14, 15, 16, 18)  # 距離の区切り [cm]
 COUNT_EDGES = (10, 15, 20)  # 片の数の区切り
-REASONS = ("success", "not_grasped", "missed_pot", "wrong_piece")
+REASONS = ("success", "not_grasped", "missed_pot", "wrong_piece", "wrong_food")
 REASON_LABELS = {
     "success": "成功",
     "not_grasped": "掴めず",
     "missed_pot": "鍋外",
     "wrong_piece": "別の片",
+    "wrong_food": "別の食材",
 }
 
 
@@ -91,8 +92,23 @@ def summarize_eval(name: str, eval_dir: Path) -> list[str]:
     ]
     if "n_pieces" in rows[0]:
         lines += _table(rows, lambda r: int(r["n_pieces"]), COUNT_EDGES, "片の数", "個", True)
+    if "target_food" in rows[0]:
+        lines += _table_by_food(rows)
     if "land_err_mm" in rows[0]:
         lines += _landing_by_outcome(rows)
+    return lines
+
+
+def _table_by_food(rows: list[dict]) -> list[str]:
+    """指示文で指定した食材ごとの回数・成功率・失敗の内訳."""
+    lines = ["  指定した食材  回数  成功率  " + "  ".join(REASON_LABELS[k] for k in REASONS[1:])]
+    for food in sorted({r["target_food"] for r in rows}):
+        group = [r for r in rows if r["target_food"] == food]
+        reasons = Counter(r["reason"] for r in group)
+        fails = "  ".join(f"{reasons[k]:>4}" for k in REASONS[1:])
+        lines.append(
+            f"  {food:<12} {len(group):>4}  {reasons['success'] / len(group):>5.0%}   {fails}"
+        )
     return lines
 
 

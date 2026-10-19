@@ -5,11 +5,14 @@
         --name act_pot_cube_v1 --episodes 50 --workers 25
     # 段階2: 複数の食材片（学習で見せていない形）から一番近い片を鍋に入れる
     python -m so101_food.eval.evaluate --policy ... --name ... --task multi --piece-set carrot_test
+    # 段階3: 複数の食材から、指示文で指定した食材の一番近い片を鍋に入れる（学習で見せていない形）
+    python -m so101_food.eval.evaluate --policy ... --name ... --task lang
 
 ポリシーの入力は学習データと同じ（俯瞰・手首カメラ画像と 6 関節の角度）で、
 物体の真の位置は使わない。各エピソードの結果を次のように分類する。
 
 - ``success``     : 対象の小片（複数片のときはロボットに一番近い片）が鍋の中に入った
+- ``wrong_food``  : 指示と違う食材の片を鍋に入れた・持ち上げた（段階3）
 - ``wrong_piece`` : 対象ではない片を鍋に入れた・持ち上げた（複数片のとき）
 - ``not_grasped`` : 対象の小片を持ち上げられなかった
 - ``missed_pot``  : 持ち上げたが鍋に入らなかった（運搬中の落下・鍋の外に落とした）
@@ -134,6 +137,7 @@ def _evaluate_chunk(job: dict) -> list[dict]:
             "seed": seed,
             "object": info["target_object"],
             "n_pieces": int(info["n_pieces"]),
+            "target_food": info["target_food"],
             "success": reason == "success",
             "reason": reason,
             "steps": step,
@@ -172,6 +176,18 @@ def _success_by_count(results: list[dict], width: int = 5) -> dict:
     return out
 
 
+def _success_by_food(results: list[dict]) -> dict:
+    """指示文で指定した食材ごとの成功率."""
+    out = {}
+    for food in sorted({r["target_food"] for r in results}):
+        group = [r for r in results if r["target_food"] == food]
+        out[food] = {
+            "episodes": len(group),
+            "success_rate": round(sum(r["success"] for r in group) / len(group), 4),
+        }
+    return out
+
+
 def main(argv: list[str] | None = None) -> None:
     from so101_food.env.spec import TASKS, TaskSpec
     from so101_food.utils.parallel import default_workers, prepare_workers, run_parallel
@@ -195,7 +211,8 @@ def main(argv: list[str] | None = None) -> None:
         "--task",
         choices=TASKS,
         default="cube",
-        help="cube（段階1）/ pieces（食材片 1 個）/ multi（段階2: 複数の食材片）",
+        help="cube（段階1）/ pieces（食材片 1 個）/ multi（段階2: 複数の食材片）/ "
+        "lang（段階3: 複数の食材と言葉での指示）",
     )
     ap.add_argument(
         "--piece-set",
@@ -206,8 +223,10 @@ def main(argv: list[str] | None = None) -> None:
     ap.add_argument(
         "--spawn-radius", type=float, default=0.07, help="配置範囲の半径（分布外評価用）"
     )
-    ap.add_argument("--min-pieces", type=int, default=5, help="multi で机に置く片の数の下限")
-    ap.add_argument("--max-pieces", type=int, default=20, help="multi で机に置く片の数の上限")
+    ap.add_argument("--min-pieces", type=int, default=5, help="multi / lang で机に置く片の数の下限")
+    ap.add_argument(
+        "--max-pieces", type=int, default=20, help="multi / lang で机に置く片の数の上限"
+    )
     ap.add_argument("--n-action-steps", type=int, default=None, help="行動チャンクのうち実行する数")
     ap.add_argument(
         "--temporal-ensemble", type=float, default=None, help="ACT の時間的アンサンブル係数"
@@ -281,7 +300,8 @@ def main(argv: list[str] | None = None) -> None:
         "mean_steps_success": (
             round(sum(r["steps"] for r in successes) / len(successes), 1) if successes else None
         ),
-        "by_n_pieces": _success_by_count(results) if task.task == "multi" else None,
+        "by_n_pieces": _success_by_count(results) if task.task in ("multi", "lang") else None,
+        "by_food": _success_by_food(results) if task.task == "lang" else None,
         "task": task.to_dict(),
         "settings": {
             k: getattr(args, k)

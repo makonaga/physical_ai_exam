@@ -9,6 +9,9 @@ so101-nexus の ``PickEnv``（小片の配置・把持判定）を土台に、�
   （データ生成時は状態列から描画し直すため）。
 - ``clutter`` を指定すると、机の上に複数の食材片を散らばせ、ロボットに一番近い片を
   掴む対象にする（段階2）。指定しなければ机の上の物体は 1 個（段階1）。
+- ``clutter.language`` を True にすると、エピソードごとに食材を 1 つ選んで指示文で伝え
+  （例: "Put the potato piece closest to the robot into the pot."）、その食材の片のうち
+  ロボットに一番近い片を対象にする（段階3）。
 """
 
 from __future__ import annotations
@@ -42,6 +45,8 @@ CONTROL_HZ = 25  # ポリシー・データセットの周期
 FRAME_SKIP = PHYSICS_HZ // CONTROL_HZ
 TASK_DESCRIPTION = "Put the food piece into the pot."
 TASK_DESCRIPTION_CLUTTER = "Put the food piece closest to the robot into the pot."
+# 段階3: 食材を言葉で指定する指示文（{food} に carrot / potato / daikon が入る）
+TASK_DESCRIPTION_LANGUAGE = "Put the {food} piece closest to the robot into the pot."
 POT_RGBA = "0.55 0.57 0.62 1"  # 金属っぽい灰色
 # 食材片の基本色（RGB）。エピソードごとに明るさ・色味を少し揺らす
 FOOD_RGB = {
@@ -111,6 +116,9 @@ class ClutterSpec:
     max_target_dist: float = 0.27  # 一番近い片がこれより遠い配置はやり直す（腕が届かない）
     place_tries: int = 100  # 1 個の片を置く位置を探す回数
     scene_tries: int = 30  # 配置全体をやり直す回数の上限
+    # True なら、机の上にある食材から 1 つを選んで指示文で伝え、その食材の片のうち一番近い片を
+    # 対象にする（一番近い片・2 番目との差の条件も、その食材の片の中で判定する）
+    language: bool = False
 
 
 def pot_xml(pot: PotSpec) -> str:
@@ -270,7 +278,18 @@ class PotTaskEnv(PickEnv):
 
     @property
     def task_description(self) -> str:
-        return TASK_DESCRIPTION_CLUTTER if self.clutter is not None else TASK_DESCRIPTION
+        if self.clutter is None:
+            return TASK_DESCRIPTION
+        return self._task_description or TASK_DESCRIPTION_CLUTTER
+
+    @property
+    def target_food(self) -> str:
+        """対象の片の食材名（carrot / potato / daikon。立方体なら cube）."""
+        return self._slot_food(self._target_slot_idx)
+
+    def _slot_food(self, slot: int) -> str:
+        obj = self._slots[slot].obj
+        return obj.name.split()[0] if isinstance(obj, MeshObject) else "cube"
 
     @property
     def active_slots(self) -> list[int]:
@@ -350,7 +369,7 @@ class PotTaskEnv(PickEnv):
     def _sample_layout(
         self, rng: np.random.Generator, n: int
     ) -> list[tuple[int, np.ndarray, float]] | None:
-        """``n`` 個の片の種類・位置・向きを決める. 根元に近い順に並べて返す（先頭が対象）."""
+        """``n`` 個の片の種類・位置・向きを決める. 先頭が対象、残りは根元に近い順に並べて返す."""
         c = self.clutter
         chosen = rng.choice(len(self._slots), size=n, replace=False)
         placed: list[tuple[int, np.ndarray, float, np.ndarray]] = []
@@ -363,12 +382,21 @@ class PotTaskEnv(PickEnv):
                     placed.append((int(slot), xy, yaw, poly))
                     break
         dist = np.array([np.linalg.norm(_polygon_centroid(q[3])) for q in placed])
-        order = np.argsort(dist)
-        if len(placed) < n or dist[order[0]] > c.max_target_dist:
+        order = list(np.argsort(dist))
+        if len(placed) < n:
             return None
-        if dist[order[1]] - dist[order[0]] < c.nearest_margin:
+        candidates = order
+        if c.language:
+            # 机の上にある食材から 1 つ選び、その食材の片だけで一番近い片を決める
+            foods = sorted({self._slot_food(q[0]) for q in placed})
+            food = foods[int(rng.integers(len(foods)))]
+            candidates = [i for i in order if self._slot_food(placed[i][0]) == food]
+        if dist[candidates[0]] > c.max_target_dist:
             return None
-        return [placed[i][:3] for i in order]
+        if len(candidates) > 1 and dist[candidates[1]] - dist[candidates[0]] < c.nearest_margin:
+            return None
+        target = candidates[0]
+        return [placed[target][:3]] + [placed[i][:3] for i in order if i != target]
 
     def _place_layout(self, layout: list[tuple[int, np.ndarray, float]]) -> None:
         for slot, xy, yaw in layout:
@@ -413,7 +441,10 @@ class PotTaskEnv(PickEnv):
                 break
         if layout is None:
             raise RuntimeError("食材片を置ける配置が見つかりませんでした")
-        self._task_description = TASK_DESCRIPTION_CLUTTER
+        if self.clutter.language:
+            self._task_description = TASK_DESCRIPTION_LANGUAGE.format(food=self.target_food)
+        else:
+            self._task_description = TASK_DESCRIPTION_CLUTTER
 
     def _task_reset(self) -> None:
         if self.clutter is not None:
@@ -429,6 +460,7 @@ class PotTaskEnv(PickEnv):
         self._max_lift = 0.0
         self._ever_grasped = False
         self._max_other_lift = 0.0
+        self._moved_other_foods: set[str] = set()
         for slot in self._active:
             obj = self._slots[slot].obj
             if isinstance(obj, MeshObject):
@@ -451,18 +483,24 @@ class PotTaskEnv(PickEnv):
         others_in_pot = 0
         for i in self._active[1:]:
             pos = self.object_pose(i)[:3]
-            others_in_pot += self.pot.contains(pos)
-            self._max_other_lift = max(
-                self._max_other_lift, pos[2] - self._initial_z.get(i, pos[2])
-            )
+            in_pot = self.pot.contains(pos)
+            lift = pos[2] - self._initial_z.get(i, pos[2])
+            others_in_pot += in_pot
+            self._max_other_lift = max(self._max_other_lift, lift)
+            if in_pot or lift >= 0.02:
+                self._moved_other_foods.add(self._slot_food(i))
+        target_food = self.target_food
         info.update(
             obj_pos=obj_pos,
             in_pot=self.pot.contains(obj_pos),
             max_lift=self._max_lift,
             ever_grasped=self._ever_grasped,
             n_pieces=len(self._active),
+            target_food=target_food,
             others_in_pot=others_in_pot,
             max_other_lift=self._max_other_lift,
+            # 対象と違う食材の片を持ち上げた・鍋に入れた（言葉の指示を取り違えた）
+            moved_other_food=bool(self._moved_other_foods - {target_food}),
         )
         info["success"] = info["in_pot"]
         return info
@@ -475,13 +513,16 @@ def failure_reason(info: dict) -> str:
     """エピソード終了時の ``info`` から結果を分類する.
 
     - ``success``     : 対象の片が鍋の中に入った
-    - ``wrong_piece`` : 対象の片は持ち上げず、別の片を鍋に入れた・持ち上げた（複数片のとき）
+    - ``wrong_food``  : 対象の片は持ち上げず、指示と違う食材の片を鍋に入れた・持ち上げた（段階3）
+    - ``wrong_piece`` : 対象の片は持ち上げず、同じ食材の別の片を鍋に入れた・持ち上げた
     - ``not_grasped`` : 対象の片を持ち上げられなかった
     - ``missed_pot``  : 対象の片を持ち上げたが鍋に入らなかった
     """
     if info["success"]:
         return "success"
     lifted = info["ever_grasped"] and info["max_lift"] >= 0.02
+    if not lifted and info.get("moved_other_food", False):
+        return "wrong_food"
     if not lifted and (info.get("others_in_pot", 0) > 0 or info.get("max_other_lift", 0) >= 0.02):
         return "wrong_piece"
     if not lifted:

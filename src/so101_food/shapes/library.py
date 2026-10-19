@@ -25,6 +25,10 @@ PIECES_DIR = REPO / "assets" / "pieces"
 DEFAULT_SETS = {
     "carrot_train": ("carrot", 300, 0),
     "carrot_test": ("carrot", 100, 1),
+    "potato_train": ("potato", 300, 2),
+    "potato_test": ("potato", 100, 3),
+    "daikon_train": ("daikon", 300, 4),
+    "daikon_test": ("daikon", 100, 5),
 }
 
 

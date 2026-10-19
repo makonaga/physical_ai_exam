@@ -2,6 +2,7 @@
 
     python -m so101_food.datagen.generate --name pot_cube_v1 --episodes 300 --workers 36
     python -m so101_food.datagen.generate --name pot_multi_v1 --task multi --episodes 1000
+    python -m so101_food.datagen.generate --name pot_lang_v1 --task lang --episodes 1500
 
 各ワーカーは次を繰り返し、自分の割り当て数だけ成功エピソードを集める。
 
@@ -16,7 +17,9 @@
 ``--task pieces`` / ``--task multi``（段階2）では、形状セットから ``--pool-size`` 個の食材片を
 選んで環境を作り、``--rebuild-every`` 回の試行ごとに選び直す（多くの形を少しずつ使うため）。
 ``multi`` では各エピソードで ``--min-pieces``〜``--max-pieces`` 個を机に置き、ロボットに
-一番近い片を鍋に入れる。配置はエキスパートが他の片に指を当てずに掴めるものだけを使う。
+一番近い片を鍋に入れる。``--task lang``（段階3）では、にんじん・じゃがいも・大根の片を混ぜて置き、
+指示文で指定した食材の片のうち一番近い片を鍋に入れる（形状セットは ``<食材>_train``）。
+配置はエキスパートが他の片に指を当てずに掴めるものだけを使う。
 """
 
 from __future__ import annotations
@@ -108,6 +111,8 @@ def _generate_shard(job: dict) -> dict:
                 "seed": seed,
                 "object": rec.info["target_object"],
                 "n_pieces": int(rec.info["n_pieces"]),
+                "target_food": rec.info["target_food"],
+                "task": env.task_description,
                 "n_frames": rec.n_frames,
                 "obj_pose0": np.round(rec.obj_pose0, 4).tolist(),
             }
@@ -152,22 +157,27 @@ def main(argv: list[str] | None = None) -> None:
         "--task",
         choices=TASKS,
         default="cube",
-        help="cube（段階1）/ pieces（食材片 1 個）/ multi（段階2: 複数の食材片）",
+        help="cube（段階1）/ pieces（食材片 1 個）/ multi（段階2: 複数の食材片）/ "
+        "lang（段階3: 複数の食材と言葉での指示）",
     )
     ap.add_argument(
-        "--piece-set", default="carrot_train", help="食材片の形状セット（pieces / multi のとき）"
+        "--piece-set",
+        default="carrot_train",
+        help="食材片の形状セット（pieces / multi のとき。lang では末尾の train / test だけを使う）",
     )
     ap.add_argument(
         "--pool-size",
         type=int,
         default=None,
-        help="1 つの環境に入れる食材片の数（既定: pieces 20、multi 24）",
+        help="1 つの環境に入れる食材片の数（既定: pieces 20、multi / lang 24）",
     )
     ap.add_argument("--rebuild-every", type=int, default=10, help="食材片を選び直す試行回数の間隔")
-    ap.add_argument("--min-pieces", type=int, default=5, help="multi で机に置く片の数の下限")
-    ap.add_argument("--max-pieces", type=int, default=20, help="multi で机に置く片の数の上限")
+    ap.add_argument("--min-pieces", type=int, default=5, help="multi / lang で机に置く片の数の下限")
+    ap.add_argument(
+        "--max-pieces", type=int, default=20, help="multi / lang で机に置く片の数の上限"
+    )
     args = ap.parse_args(argv)
-    pool_size = args.pool_size or (24 if args.task == "multi" else 20)
+    pool_size = args.pool_size or (24 if args.task in ("multi", "lang") else 20)
     task = TaskSpec(
         task=args.task,
         piece_set=args.piece_set,

@@ -1,12 +1,12 @@
 # SO-101 食材投入タスク（Physical AI 最終課題）
 
 切った食材の小片を SO-101 アームで掴んで鍋に入れるタスクを、MuJoCo シミュレータ上で
-スクリプテッド・エキスパートが自動生成したデータから、LeRobot の模倣学習（ACT）で獲得する。
+スクリプテッド・エキスパートが自動生成したデータから、LeRobot の模倣学習（ACT と VLA の SmolVLA）で獲得する。
 
 - ロボット: SO-101（[so101-nexus](https://github.com/johnsutor/so101-nexus) の MuJoCo モデル・環境を土台に使用）
 - 学習: [LeRobot](https://github.com/huggingface/lerobot)（ACT と、VLA の SmolVLA）
 - 実行環境: Amazon SageMaker Studio（JupyterLab）。データ生成・評価は CPU インスタンス（`ml.c5.9xlarge`）、
-  学習は GPU インスタンス（`ml.g5.xlarge`）
+  学習は GPU インスタンス（ACT は `ml.g5.xlarge`、SmolVLA は `ml.g5.2xlarge`）
 
 ## 進捗
 
@@ -15,25 +15,23 @@
 | 0 | 環境構築、グリッパ寸法・作業領域の確認、把持できるかの確認 | 完了。結果: [docs/step0_notes.md](docs/step0_notes.md) |
 | 1 | 立方体 1 個でエキスパート → データ生成 → ACT 学習 → 評価 | 完了（成功率 82%）。手順: [docs/step1_howto.md](docs/step1_howto.md)、結果: [docs/step1_results.md](docs/step1_results.md) |
 | 2 | 形・大きさがランダムなにんじんの小片を 5〜20 個散らばせ、ロボットに一番近い片を鍋に入れる | 学習・評価まで完了（初めて見る形で成功率 56%。掴む片が遠いと掴み損ねる）。原因を調査中。手順: [docs/step2_howto.md](docs/step2_howto.md)、結果: [docs/step2_results.md](docs/step2_results.md) |
-| 3 | 複数食材（じゃがいも・大根）と言葉による指示、分布外評価、薄切りの失敗デモ | 未着手 |
+| 3 | にんじん・じゃがいも・大根の片を混ぜて 5〜20 個散らばせ、指示文で指定した食材の一番近い片を鍋に入れる（SmolVLA と、指示文を読まない ACT を比較） | 実装完了。データ生成・学習・評価はこれから。手順: [docs/step3_howto.md](docs/step3_howto.md) |
 | 4 | 動画・レポート・リポジトリ整理 | 未着手 |
 | ― | ACT を VLA（SmolVLA）に置き換える（段階2のデータで学習し、ACT と比較） | 学習・評価まで完了（初めて見る形で成功率 40%。ACT は 56%）。改善の検討中。結果: [docs/vla_results.md](docs/vla_results.md)。手順: [docs/vla_howto.md](docs/vla_howto.md) |
 
-## 次回の作業（VLA の評価）
+## 次回の作業
 
-SmolVLA の学習は完了（`outputs/train/smolvla_pot_multi_v1`）。`ml.c5.9xlarge` で評価し、ACT と比べる
-（詳しくは [docs/vla_howto.md](docs/vla_howto.md) の D）。
+1. 段階2の SmolVLA を、推論し直す間隔を短くして評価する（`ml.c5.9xlarge`。学習し直しは不要）。
 
-```bash
-cd ~/user-default-efs/physical_ai_exam
-git pull
-bash scripts/setup_sagemaker.sh
-bash scripts/evaluate.sh smolvla_pot_multi_v1 100 --task multi
-# ↑ が終わってから
-bash scripts/evaluate.sh smolvla_pot_multi_v1 100 --task multi --piece-set carrot_train --name smolvla_pot_multi_v1_seen
-# ↑ が終わってから
-bash scripts/analyze_eval.sh act_pot_multi_v1 smolvla_pot_multi_v1 act_pot_multi_v1_seen smolvla_pot_multi_v1_seen --dataset pot_multi_v1
-```
+   ```bash
+   bash scripts/evaluate.sh smolvla_pot_multi_v1 100 --task multi --n-action-steps 25 --name smolvla_pot_multi_v1_n25
+   # ↑ が終わってから
+   bash scripts/evaluate.sh smolvla_pot_multi_v1 100 --task multi --n-action-steps 10 --name smolvla_pot_multi_v1_n10
+   # ↑ が終わってから
+   bash scripts/analyze_eval.sh smolvla_pot_multi_v1 smolvla_pot_multi_v1_n25 smolvla_pot_multi_v1_n10
+   ```
+
+2. 段階3（データ生成 → SmolVLA・ACT の学習 → 評価）。手順は [docs/step3_howto.md](docs/step3_howto.md)。
 
 ACT の改善（掴む片が遠いと掴み損ねる原因の調査）は保留中。手順は [docs/step2_results.md](docs/step2_results.md) の 7。
 
@@ -49,6 +47,7 @@ ACT の改善（掴む片が遠いと掴み損ねる原因の調査）は保留�
 | [docs/step2_results.md](docs/step2_results.md) | 段階2: 結果（学習・評価）と考察 |
 | [docs/vla_howto.md](docs/vla_howto.md) | VLA（SmolVLA）: 選んだ理由、学習・評価の手順 |
 | [docs/vla_results.md](docs/vla_results.md) | VLA（SmolVLA）: 結果（学習・評価）と ACT との比較 |
+| [docs/step3_howto.md](docs/step3_howto.md) | 段階3: 実行手順と設計メモ（じゃがいも・大根の形、指示文、対象の選び方） |
 
 ## セットアップ（SageMaker Studio）
 
@@ -81,9 +80,12 @@ ACT の改善（掴む片が遠いと掴み損ねる原因の調査）は保留�
 | `cube` | 25mm 角の立方体 1 個を鍋に入れる | 段階1 |
 | `pieces` | 形・大きさがランダムな食材片 1 個を鍋に入れる | （比較用） |
 | `multi` | 食材片を 5〜20 個散らばせ、ロボットに一番近い片を鍋に入れる | 段階2 |
+| `lang` | にんじん・じゃがいも・大根の片を混ぜて 5〜20 個散らばせ、指示文で指定した食材の一番近い片を鍋に入れる | 段階3 |
 
 どのタスクも、ポリシーの入力は俯瞰カメラ・手首カメラの画像（224×224）と 6 関節の角度、
 出力は 6 関節の目標角度（25Hz）。物体の真の位置はポリシーに与えない。
+指示文（例: `Put the potato piece closest to the robot into the pot.`）はデータに記録され、SmolVLA は入力に使う
+（ACT は使わない）。
 
 ## スクリプト
 
@@ -122,7 +124,7 @@ ACT の改善（掴む片が遠いと掴み損ねる原因の調査）は保留�
 │   ├── datagen/   # 成功フィルタ付きデータ生成（並列、LeRobot v3 形式）、動画への書き出し
 │   ├── vla/       # VLA の追加学習の補助（カメラ名の対応付け）
 │   └── eval/      # 学習済みポリシーの評価（並列）、評価結果の分析
-├── assets/pieces/ # 事前生成した食材片の形状セット（学習用 300 個・評価用 100 個）
+├── assets/pieces/ # 事前生成した食材片の形状セット（にんじん・じゃがいも・大根 × 学習用 300 個・評価用 100 個）
 ├── notebooks/     # SageMaker で実行するノートブック
 ├── scripts/       # セットアップ・データ生成・学習・評価のスクリプト
 ├── tests/         # 動作確認テスト（pytest）

@@ -1,0 +1,1407 @@
+{
+ "name": "potato_test",
+ "food": "potato",
+ "seed": 3,
+ "pieces": [
+  {
+   "name": "potato_0000",
+   "food": "potato",
+   "style": "random",
+   "volume_cm3": 10.574,
+   "mass_kg": 0.01005,
+   "extents_mm": [
+    28.9,
+    33.1,
+    23.3
+   ],
+   "min_width_mm": 23.3,
+   "n_vertices": 18
+  },
+  {
+   "name": "potato_0001",
+   "food": "potato",
+   "style": "random",
+   "volume_cm3": 7.752,
+   "mass_kg": 0.00736,
+   "extents_mm": [
+    29.1,
+    33.1,
+    18.6
+   ],
+   "min_width_mm": 18.6,
+   "n_vertices": 22
+  },
+  {
+   "name": "potato_0002",
+   "food": "potato",
+   "style": "dice",
+   "volume_cm3": 8.976,
+   "mass_kg": 0.00853,
+   "extents_mm": [
+    21.7,
+    24.6,
+    20.9
+   ],
+   "min_width_mm": 20.9,
+   "n_vertices": 40
+  },
+  {
+   "name": "potato_0003",
+   "food": "potato",
+   "style": "random",
+   "volume_cm3": 10.996,
+   "mass_kg": 0.01045,
+   "extents_mm": [
+    30.5,
+    31.7,
+    24.0
+   ],
+   "min_width_mm": 24.0,
+   "n_vertices": 34
+  },
+  {
+   "name": "potato_0004",
+   "food": "potato",
+   "style": "random",
+   "volume_cm3": 9.643,
+   "mass_kg": 0.00916,
+   "extents_mm": [
+    33.0,
+    30.2,
+    22.4
+   ],
+   "min_width_mm": 20.9,
+   "n_vertices": 30
+  },
+  {
+   "name": "potato_0005",
+   "food": "potato",
+   "style": "dice",
+   "volume_cm3": 8.293,
+   "mass_kg": 0.00788,
+   "extents_mm": [
+    21.4,
+    22.7,
+    18.9
+   ],
+   "min_width_mm": 18.9,
+   "n_vertices": 28
+  },
+  {
+   "name": "potato_0006",
+   "food": "potato",
+   "style": "random",
+   "volume_cm3": 7.729,
+   "mass_kg": 0.00734,
+   "extents_mm": [
+    30.6,
+    25.1,
+    22.9
+   ],
+   "min_width_mm": 22.9,
+   "n_vertices": 18
+  },
+  {
+   "name": "potato_0007",
+   "food": "potato",
+   "style": "random",
+   "volume_cm3": 8.088,
+   "mass_kg": 0.00768,
+   "extents_mm": [
+    27.7,
+    24.3,
+    24.1
+   ],
+   "min_width_mm": 22.5,
+   "n_vertices": 40
+  },
+  {
+   "name": "potato_0008",
+   "food": "potato",
+   "style": "dice",
+   "volume_cm3": 12.887,
+   "mass_kg": 0.01224,
+   "extents_mm": [
+    23.9,
+    24.9,
+    22.0
+   ],
+   "min_width_mm": 22.0,
+   "n_vertices": 18
+  },
+  {
+   "name": "potato_0009",
+   "food": "potato",
+   "style": "random",
+   "volume_cm3": 8.587,
+   "mass_kg": 0.00816,
+   "extents_mm": [
+    23.8,
+    31.7,
+    20.8
+   ],
+   "min_width_mm": 20.2,
+   "n_vertices": 20
+  },
+  {
+   "name": "potato_0010",
+   "food": "potato",
+   "style": "random",
+   "volume_cm3": 7.984,
+   "mass_kg": 0.00759,
+   "extents_mm": [
+    34.3,
+    26.0,
+    24.2
+   ],
+   "min_width_mm": 21.4,
+   "n_vertices": 20
+  },
+  {
+   "name": "potato_0011",
+   "food": "potato",
+   "style": "dice",
+   "volume_cm3": 8.593,
+   "mass_kg": 0.00816,
+   "extents_mm": [
+    18.9,
+    25.8,
+    18.6
+   ],
+   "min_width_mm": 18.6,
+   "n_vertices": 38
+  },
+  {
+   "name": "potato_0012",
+   "food": "potato",
+   "style": "random",
+   "volume_cm3": 7.094,
+   "mass_kg": 0.00674,
+   "extents_mm": [
+    24.7,
+    33.3,
+    21.4
+   ],
+   "min_width_mm": 19.8,
+   "n_vertices": 46
+  },
+  {
+   "name": "potato_0013",
+   "food": "potato",
+   "style": "random",
+   "volume_cm3": 8.003,
+   "mass_kg": 0.0076,
+   "extents_mm": [
+    28.9,
+    25.0,
+    24.8
+   ],
+   "min_width_mm": 22.3,
+   "n_vertices": 48
+  },
+  {
+   "name": "potato_0014",
+   "food": "potato",
+   "style": "dice",
+   "volume_cm3": 8.086,
+   "mass_kg": 0.00768,
+   "extents_mm": [
+    23.3,
+    21.1,
+    20.1
+   ],
+   "min_width_mm": 20.1,
+   "n_vertices": 40
+  },
+  {
+   "name": "potato_0015",
+   "food": "potato",
+   "style": "random",
+   "volume_cm3": 11.493,
+   "mass_kg": 0.01092,
+   "extents_mm": [
+    30.0,
+    30.7,
+    21.8
+   ],
+   "min_width_mm": 21.8,
+   "n_vertices": 50
+  },
+  {
+   "name": "potato_0016",
+   "food": "potato",
+   "style": "random",
+   "volume_cm3": 6.29,
+   "mass_kg": 0.00598,
+   "extents_mm": [
+    23.3,
+    29.3,
+    20.2
+   ],
+   "min_width_mm": 20.2,
+   "n_vertices": 34
+  },
+  {
+   "name": "potato_0017",
+   "food": "potato",
+   "style": "dice",
+   "volume_cm3": 11.969,
+   "mass_kg": 0.01137,
+   "extents_mm": [
+    24.7,
+    24.0,
+    20.3
+   ],
+   "min_width_mm": 20.3,
+   "n_vertices": 8
+  },
+  {
+   "name": "potato_0018",
+   "food": "potato",
+   "style": "random",
+   "volume_cm3": 9.676,
+   "mass_kg": 0.00919,
+   "extents_mm": [
+    30.3,
+    28.0,
+    23.4
+   ],
+   "min_width_mm": 23.4,
+   "n_vertices": 32
+  },
+  {
+   "name": "potato_0019",
+   "food": "potato",
+   "style": "random",
+   "volume_cm3": 7.239,
+   "mass_kg": 0.00688,
+   "extents_mm": [
+    27.9,
+    27.2,
+    19.5
+   ],
+   "min_width_mm": 19.5,
+   "n_vertices": 22
+  },
+  {
+   "name": "potato_0020",
+   "food": "potato",
+   "style": "dice",
+   "volume_cm3": 10.393,
+   "mass_kg": 0.00987,
+   "extents_mm": [
+    21.7,
+    26.2,
+    19.2
+   ],
+   "min_width_mm": 19.2,
+   "n_vertices": 32
+  },
+  {
+   "name": "potato_0021",
+   "food": "potato",
+   "style": "random",
+   "volume_cm3": 9.289,
+   "mass_kg": 0.00882,
+   "extents_mm": [
+    32.1,
+    29.1,
+    22.3
+   ],
+   "min_width_mm": 21.8,
+   "n_vertices": 40
+  },
+  {
+   "name": "potato_0022",
+   "food": "potato",
+   "style": "random",
+   "volume_cm3": 10.705,
+   "mass_kg": 0.01017,
+   "extents_mm": [
+    28.9,
+    30.6,
+    26.1
+   ],
+   "min_width_mm": 25.3,
+   "n_vertices": 28
+  },
+  {
+   "name": "potato_0023",
+   "food": "potato",
+   "style": "dice",
+   "volume_cm3": 10.336,
+   "mass_kg": 0.00982,
+   "extents_mm": [
+    22.8,
+    25.1,
+    19.1
+   ],
+   "min_width_mm": 19.1,
+   "n_vertices": 22
+  },
+  {
+   "name": "potato_0024",
+   "food": "potato",
+   "style": "random",
+   "volume_cm3": 11.562,
+   "mass_kg": 0.01098,
+   "extents_mm": [
+    30.3,
+    34.0,
+    23.4
+   ],
+   "min_width_mm": 22.8,
+   "n_vertices": 28
+  },
+  {
+   "name": "potato_0025",
+   "food": "potato",
+   "style": "random",
+   "volume_cm3": 9.278,
+   "mass_kg": 0.00881,
+   "extents_mm": [
+    25.9,
+    30.6,
+    22.9
+   ],
+   "min_width_mm": 21.8,
+   "n_vertices": 48
+  },
+  {
+   "name": "potato_0026",
+   "food": "potato",
+   "style": "dice",
+   "volume_cm3": 13.385,
+   "mass_kg": 0.01272,
+   "extents_mm": [
+    27.6,
+    24.2,
+    20.7
+   ],
+   "min_width_mm": 20.7,
+   "n_vertices": 28
+  },
+  {
+   "name": "potato_0027",
+   "food": "potato",
+   "style": "random",
+   "volume_cm3": 7.512,
+   "mass_kg": 0.00714,
+   "extents_mm": [
+    26.7,
+    27.0,
+    25.3
+   ],
+   "min_width_mm": 19.8,
+   "n_vertices": 20
+  },
+  {
+   "name": "potato_0028",
+   "food": "potato",
+   "style": "random",
+   "volume_cm3": 8.359,
+   "mass_kg": 0.00794,
+   "extents_mm": [
+    26.0,
+    29.3,
+    24.7
+   ],
+   "min_width_mm": 22.0,
+   "n_vertices": 50
+  },
+  {
+   "name": "potato_0029",
+   "food": "potato",
+   "style": "dice",
+   "volume_cm3": 8.604,
+   "mass_kg": 0.00817,
+   "extents_mm": [
+    23.8,
+    26.0,
+    17.5
+   ],
+   "min_width_mm": 17.5,
+   "n_vertices": 42
+  },
+  {
+   "name": "potato_0030",
+   "food": "potato",
+   "style": "random",
+   "volume_cm3": 8.45,
+   "mass_kg": 0.00803,
+   "extents_mm": [
+    31.4,
+    24.8,
+    23.5
+   ],
+   "min_width_mm": 21.1,
+   "n_vertices": 20
+  },
+  {
+   "name": "potato_0031",
+   "food": "potato",
+   "style": "random",
+   "volume_cm3": 10.104,
+   "mass_kg": 0.0096,
+   "extents_mm": [
+    32.2,
+    30.5,
+    26.2
+   ],
+   "min_width_mm": 25.3,
+   "n_vertices": 28
+  },
+  {
+   "name": "potato_0032",
+   "food": "potato",
+   "style": "dice",
+   "volume_cm3": 8.702,
+   "mass_kg": 0.00827,
+   "extents_mm": [
+    22.0,
+    21.6,
+    19.4
+   ],
+   "min_width_mm": 19.4,
+   "n_vertices": 30
+  },
+  {
+   "name": "potato_0033",
+   "food": "potato",
+   "style": "random",
+   "volume_cm3": 9.211,
+   "mass_kg": 0.00875,
+   "extents_mm": [
+    24.5,
+    30.7,
+    24.0
+   ],
+   "min_width_mm": 23.4,
+   "n_vertices": 30
+  },
+  {
+   "name": "potato_0034",
+   "food": "potato",
+   "style": "random",
+   "volume_cm3": 9.951,
+   "mass_kg": 0.00945,
+   "extents_mm": [
+    30.1,
+    26.5,
+    22.7
+   ],
+   "min_width_mm": 22.7,
+   "n_vertices": 8
+  },
+  {
+   "name": "potato_0035",
+   "food": "potato",
+   "style": "dice",
+   "volume_cm3": 10.746,
+   "mass_kg": 0.01021,
+   "extents_mm": [
+    22.0,
+    24.8,
+    20.9
+   ],
+   "min_width_mm": 20.9,
+   "n_vertices": 28
+  },
+  {
+   "name": "potato_0036",
+   "food": "potato",
+   "style": "random",
+   "volume_cm3": 6.565,
+   "mass_kg": 0.00624,
+   "extents_mm": [
+    29.6,
+    25.6,
+    21.3
+   ],
+   "min_width_mm": 21.3,
+   "n_vertices": 34
+  },
+  {
+   "name": "potato_0037",
+   "food": "potato",
+   "style": "random",
+   "volume_cm3": 8.846,
+   "mass_kg": 0.0084,
+   "extents_mm": [
+    29.0,
+    28.1,
+    22.6
+   ],
+   "min_width_mm": 22.6,
+   "n_vertices": 34
+  },
+  {
+   "name": "potato_0038",
+   "food": "potato",
+   "style": "dice",
+   "volume_cm3": 10.88,
+   "mass_kg": 0.01034,
+   "extents_mm": [
+    23.9,
+    26.0,
+    19.2
+   ],
+   "min_width_mm": 19.2,
+   "n_vertices": 32
+  },
+  {
+   "name": "potato_0039",
+   "food": "potato",
+   "style": "random",
+   "volume_cm3": 7.757,
+   "mass_kg": 0.00737,
+   "extents_mm": [
+    28.1,
+    29.9,
+    22.9
+   ],
+   "min_width_mm": 21.1,
+   "n_vertices": 30
+  },
+  {
+   "name": "potato_0040",
+   "food": "potato",
+   "style": "random",
+   "volume_cm3": 10.483,
+   "mass_kg": 0.00996,
+   "extents_mm": [
+    32.4,
+    27.2,
+    26.7
+   ],
+   "min_width_mm": 24.3,
+   "n_vertices": 42
+  },
+  {
+   "name": "potato_0041",
+   "food": "potato",
+   "style": "dice",
+   "volume_cm3": 14.088,
+   "mass_kg": 0.01338,
+   "extents_mm": [
+    22.3,
+    29.0,
+    22.0
+   ],
+   "min_width_mm": 22.0,
+   "n_vertices": 12
+  },
+  {
+   "name": "potato_0042",
+   "food": "potato",
+   "style": "random",
+   "volume_cm3": 8.879,
+   "mass_kg": 0.00844,
+   "extents_mm": [
+    31.6,
+    25.8,
+    22.7
+   ],
+   "min_width_mm": 22.7,
+   "n_vertices": 20
+  },
+  {
+   "name": "potato_0043",
+   "food": "potato",
+   "style": "random",
+   "volume_cm3": 7.729,
+   "mass_kg": 0.00734,
+   "extents_mm": [
+    26.4,
+    29.8,
+    20.3
+   ],
+   "min_width_mm": 20.3,
+   "n_vertices": 20
+  },
+  {
+   "name": "potato_0044",
+   "food": "potato",
+   "style": "dice",
+   "volume_cm3": 10.063,
+   "mass_kg": 0.00956,
+   "extents_mm": [
+    27.3,
+    21.4,
+    18.3
+   ],
+   "min_width_mm": 18.3,
+   "n_vertices": 28
+  },
+  {
+   "name": "potato_0045",
+   "food": "potato",
+   "style": "random",
+   "volume_cm3": 8.217,
+   "mass_kg": 0.00781,
+   "extents_mm": [
+    29.8,
+    27.5,
+    23.8
+   ],
+   "min_width_mm": 21.5,
+   "n_vertices": 38
+  },
+  {
+   "name": "potato_0046",
+   "food": "potato",
+   "style": "random",
+   "volume_cm3": 8.348,
+   "mass_kg": 0.00793,
+   "extents_mm": [
+    24.5,
+    28.6,
+    24.4
+   ],
+   "min_width_mm": 22.1,
+   "n_vertices": 20
+  },
+  {
+   "name": "potato_0047",
+   "food": "potato",
+   "style": "dice",
+   "volume_cm3": 11.813,
+   "mass_kg": 0.01122,
+   "extents_mm": [
+    22.9,
+    28.2,
+    22.8
+   ],
+   "min_width_mm": 22.7,
+   "n_vertices": 52
+  },
+  {
+   "name": "potato_0048",
+   "food": "potato",
+   "style": "random",
+   "volume_cm3": 8.71,
+   "mass_kg": 0.00827,
+   "extents_mm": [
+    23.8,
+    30.9,
+    21.9
+   ],
+   "min_width_mm": 21.9,
+   "n_vertices": 34
+  },
+  {
+   "name": "potato_0049",
+   "food": "potato",
+   "style": "random",
+   "volume_cm3": 10.723,
+   "mass_kg": 0.01019,
+   "extents_mm": [
+    30.5,
+    29.8,
+    23.8
+   ],
+   "min_width_mm": 22.0,
+   "n_vertices": 24
+  },
+  {
+   "name": "potato_0050",
+   "food": "potato",
+   "style": "dice",
+   "volume_cm3": 10.309,
+   "mass_kg": 0.00979,
+   "extents_mm": [
+    26.0,
+    21.7,
+    20.5
+   ],
+   "min_width_mm": 20.5,
+   "n_vertices": 52
+  },
+  {
+   "name": "potato_0051",
+   "food": "potato",
+   "style": "random",
+   "volume_cm3": 7.861,
+   "mass_kg": 0.00747,
+   "extents_mm": [
+    26.4,
+    28.3,
+    22.2
+   ],
+   "min_width_mm": 22.1,
+   "n_vertices": 30
+  },
+  {
+   "name": "potato_0052",
+   "food": "potato",
+   "style": "random",
+   "volume_cm3": 7.768,
+   "mass_kg": 0.00738,
+   "extents_mm": [
+    33.9,
+    26.2,
+    17.8
+   ],
+   "min_width_mm": 17.6,
+   "n_vertices": 20
+  },
+  {
+   "name": "potato_0053",
+   "food": "potato",
+   "style": "dice",
+   "volume_cm3": 13.415,
+   "mass_kg": 0.01274,
+   "extents_mm": [
+    28.0,
+    24.0,
+    20.1
+   ],
+   "min_width_mm": 20.1,
+   "n_vertices": 8
+  },
+  {
+   "name": "potato_0054",
+   "food": "potato",
+   "style": "random",
+   "volume_cm3": 6.436,
+   "mass_kg": 0.00611,
+   "extents_mm": [
+    24.4,
+    23.6,
+    21.9
+   ],
+   "min_width_mm": 20.5,
+   "n_vertices": 46
+  },
+  {
+   "name": "potato_0055",
+   "food": "potato",
+   "style": "random",
+   "volume_cm3": 9.943,
+   "mass_kg": 0.00945,
+   "extents_mm": [
+    29.2,
+    32.3,
+    22.9
+   ],
+   "min_width_mm": 22.9,
+   "n_vertices": 28
+  },
+  {
+   "name": "potato_0056",
+   "food": "potato",
+   "style": "dice",
+   "volume_cm3": 10.183,
+   "mass_kg": 0.00967,
+   "extents_mm": [
+    21.9,
+    23.6,
+    20.0
+   ],
+   "min_width_mm": 20.0,
+   "n_vertices": 14
+  },
+  {
+   "name": "potato_0057",
+   "food": "potato",
+   "style": "random",
+   "volume_cm3": 5.403,
+   "mass_kg": 0.00513,
+   "extents_mm": [
+    25.1,
+    20.3,
+    18.7
+   ],
+   "min_width_mm": 18.7,
+   "n_vertices": 32
+  },
+  {
+   "name": "potato_0058",
+   "food": "potato",
+   "style": "random",
+   "volume_cm3": 7.587,
+   "mass_kg": 0.00721,
+   "extents_mm": [
+    25.4,
+    26.0,
+    25.2
+   ],
+   "min_width_mm": 23.4,
+   "n_vertices": 32
+  },
+  {
+   "name": "potato_0059",
+   "food": "potato",
+   "style": "dice",
+   "volume_cm3": 12.849,
+   "mass_kg": 0.01221,
+   "extents_mm": [
+    26.6,
+    25.1,
+    19.9
+   ],
+   "min_width_mm": 19.9,
+   "n_vertices": 22
+  },
+  {
+   "name": "potato_0060",
+   "food": "potato",
+   "style": "random",
+   "volume_cm3": 8.478,
+   "mass_kg": 0.00805,
+   "extents_mm": [
+    28.8,
+    29.7,
+    24.0
+   ],
+   "min_width_mm": 19.7,
+   "n_vertices": 30
+  },
+  {
+   "name": "potato_0061",
+   "food": "potato",
+   "style": "random",
+   "volume_cm3": 8.447,
+   "mass_kg": 0.00802,
+   "extents_mm": [
+    32.4,
+    25.8,
+    19.4
+   ],
+   "min_width_mm": 19.4,
+   "n_vertices": 16
+  },
+  {
+   "name": "potato_0062",
+   "food": "potato",
+   "style": "dice",
+   "volume_cm3": 10.968,
+   "mass_kg": 0.01042,
+   "extents_mm": [
+    27.8,
+    22.1,
+    20.6
+   ],
+   "min_width_mm": 20.6,
+   "n_vertices": 46
+  },
+  {
+   "name": "potato_0063",
+   "food": "potato",
+   "style": "random",
+   "volume_cm3": 7.69,
+   "mass_kg": 0.00731,
+   "extents_mm": [
+    28.1,
+    25.2,
+    23.5
+   ],
+   "min_width_mm": 20.3,
+   "n_vertices": 20
+  },
+  {
+   "name": "potato_0064",
+   "food": "potato",
+   "style": "random",
+   "volume_cm3": 9.653,
+   "mass_kg": 0.00917,
+   "extents_mm": [
+    30.2,
+    29.8,
+    21.2
+   ],
+   "min_width_mm": 21.2,
+   "n_vertices": 24
+  },
+  {
+   "name": "potato_0065",
+   "food": "potato",
+   "style": "dice",
+   "volume_cm3": 16.499,
+   "mass_kg": 0.01567,
+   "extents_mm": [
+    27.8,
+    26.4,
+    23.1
+   ],
+   "min_width_mm": 23.1,
+   "n_vertices": 18
+  },
+  {
+   "name": "potato_0066",
+   "food": "potato",
+   "style": "random",
+   "volume_cm3": 8.283,
+   "mass_kg": 0.00787,
+   "extents_mm": [
+    27.6,
+    26.9,
+    20.3
+   ],
+   "min_width_mm": 20.3,
+   "n_vertices": 44
+  },
+  {
+   "name": "potato_0067",
+   "food": "potato",
+   "style": "random",
+   "volume_cm3": 7.69,
+   "mass_kg": 0.00731,
+   "extents_mm": [
+    25.9,
+    28.9,
+    24.1
+   ],
+   "min_width_mm": 23.2,
+   "n_vertices": 20
+  },
+  {
+   "name": "potato_0068",
+   "food": "potato",
+   "style": "dice",
+   "volume_cm3": 9.72,
+   "mass_kg": 0.00923,
+   "extents_mm": [
+    29.3,
+    20.4,
+    17.1
+   ],
+   "min_width_mm": 17.1,
+   "n_vertices": 26
+  },
+  {
+   "name": "potato_0069",
+   "food": "potato",
+   "style": "random",
+   "volume_cm3": 6.424,
+   "mass_kg": 0.0061,
+   "extents_mm": [
+    22.3,
+    27.2,
+    21.8
+   ],
+   "min_width_mm": 21.7,
+   "n_vertices": 28
+  },
+  {
+   "name": "potato_0070",
+   "food": "potato",
+   "style": "random",
+   "volume_cm3": 7.035,
+   "mass_kg": 0.00668,
+   "extents_mm": [
+    32.0,
+    23.8,
+    19.1
+   ],
+   "min_width_mm": 19.1,
+   "n_vertices": 24
+  },
+  {
+   "name": "potato_0071",
+   "food": "potato",
+   "style": "dice",
+   "volume_cm3": 10.24,
+   "mass_kg": 0.00973,
+   "extents_mm": [
+    23.6,
+    21.4,
+    20.3
+   ],
+   "min_width_mm": 20.3,
+   "n_vertices": 8
+  },
+  {
+   "name": "potato_0072",
+   "food": "potato",
+   "style": "random",
+   "volume_cm3": 7.767,
+   "mass_kg": 0.00738,
+   "extents_mm": [
+    24.9,
+    31.9,
+    19.5
+   ],
+   "min_width_mm": 19.5,
+   "n_vertices": 12
+  },
+  {
+   "name": "potato_0073",
+   "food": "potato",
+   "style": "random",
+   "volume_cm3": 7.856,
+   "mass_kg": 0.00746,
+   "extents_mm": [
+    23.8,
+    25.9,
+    23.2
+   ],
+   "min_width_mm": 22.1,
+   "n_vertices": 20
+  },
+  {
+   "name": "potato_0074",
+   "food": "potato",
+   "style": "dice",
+   "volume_cm3": 9.773,
+   "mass_kg": 0.00928,
+   "extents_mm": [
+    25.2,
+    21.2,
+    19.0
+   ],
+   "min_width_mm": 19.0,
+   "n_vertices": 20
+  },
+  {
+   "name": "potato_0075",
+   "food": "potato",
+   "style": "random",
+   "volume_cm3": 9.249,
+   "mass_kg": 0.00879,
+   "extents_mm": [
+    27.4,
+    31.2,
+    22.7
+   ],
+   "min_width_mm": 22.6,
+   "n_vertices": 40
+  },
+  {
+   "name": "potato_0076",
+   "food": "potato",
+   "style": "random",
+   "volume_cm3": 9.698,
+   "mass_kg": 0.00921,
+   "extents_mm": [
+    28.9,
+    32.5,
+    24.4
+   ],
+   "min_width_mm": 23.2,
+   "n_vertices": 20
+  },
+  {
+   "name": "potato_0077",
+   "food": "potato",
+   "style": "dice",
+   "volume_cm3": 9.309,
+   "mass_kg": 0.00884,
+   "extents_mm": [
+    22.4,
+    25.9,
+    16.9
+   ],
+   "min_width_mm": 16.9,
+   "n_vertices": 36
+  },
+  {
+   "name": "potato_0078",
+   "food": "potato",
+   "style": "random",
+   "volume_cm3": 8.885,
+   "mass_kg": 0.00844,
+   "extents_mm": [
+    31.6,
+    27.9,
+    19.4
+   ],
+   "min_width_mm": 18.8,
+   "n_vertices": 20
+  },
+  {
+   "name": "potato_0079",
+   "food": "potato",
+   "style": "random",
+   "volume_cm3": 8.793,
+   "mass_kg": 0.00835,
+   "extents_mm": [
+    26.4,
+    32.5,
+    22.5
+   ],
+   "min_width_mm": 22.5,
+   "n_vertices": 18
+  },
+  {
+   "name": "potato_0080",
+   "food": "potato",
+   "style": "dice",
+   "volume_cm3": 12.488,
+   "mass_kg": 0.01186,
+   "extents_mm": [
+    24.2,
+    24.5,
+    23.0
+   ],
+   "min_width_mm": 23.0,
+   "n_vertices": 40
+  },
+  {
+   "name": "potato_0081",
+   "food": "potato",
+   "style": "random",
+   "volume_cm3": 9.583,
+   "mass_kg": 0.0091,
+   "extents_mm": [
+    27.5,
+    32.0,
+    25.1
+   ],
+   "min_width_mm": 23.7,
+   "n_vertices": 32
+  },
+  {
+   "name": "potato_0082",
+   "food": "potato",
+   "style": "random",
+   "volume_cm3": 6.93,
+   "mass_kg": 0.00658,
+   "extents_mm": [
+    26.1,
+    27.5,
+    19.7
+   ],
+   "min_width_mm": 19.7,
+   "n_vertices": 36
+  },
+  {
+   "name": "potato_0083",
+   "food": "potato",
+   "style": "dice",
+   "volume_cm3": 8.775,
+   "mass_kg": 0.00834,
+   "extents_mm": [
+    20.3,
+    24.9,
+    17.8
+   ],
+   "min_width_mm": 17.8,
+   "n_vertices": 8
+  },
+  {
+   "name": "potato_0084",
+   "food": "potato",
+   "style": "random",
+   "volume_cm3": 6.887,
+   "mass_kg": 0.00654,
+   "extents_mm": [
+    26.9,
+    22.8,
+    20.0
+   ],
+   "min_width_mm": 19.7,
+   "n_vertices": 20
+  },
+  {
+   "name": "potato_0085",
+   "food": "potato",
+   "style": "random",
+   "volume_cm3": 6.47,
+   "mass_kg": 0.00615,
+   "extents_mm": [
+    22.1,
+    28.7,
+    20.3
+   ],
+   "min_width_mm": 19.3,
+   "n_vertices": 34
+  },
+  {
+   "name": "potato_0086",
+   "food": "potato",
+   "style": "dice",
+   "volume_cm3": 11.239,
+   "mass_kg": 0.01068,
+   "extents_mm": [
+    22.2,
+    27.5,
+    19.6
+   ],
+   "min_width_mm": 19.6,
+   "n_vertices": 30
+  },
+  {
+   "name": "potato_0087",
+   "food": "potato",
+   "style": "random",
+   "volume_cm3": 11.298,
+   "mass_kg": 0.01073,
+   "extents_mm": [
+    31.0,
+    32.5,
+    25.4
+   ],
+   "min_width_mm": 25.4,
+   "n_vertices": 42
+  },
+  {
+   "name": "potato_0088",
+   "food": "potato",
+   "style": "random",
+   "volume_cm3": 7.73,
+   "mass_kg": 0.00734,
+   "extents_mm": [
+    30.4,
+    23.8,
+    21.5
+   ],
+   "min_width_mm": 21.5,
+   "n_vertices": 18
+  },
+  {
+   "name": "potato_0089",
+   "food": "potato",
+   "style": "dice",
+   "volume_cm3": 9.647,
+   "mass_kg": 0.00916,
+   "extents_mm": [
+    20.9,
+    24.2,
+    19.9
+   ],
+   "min_width_mm": 19.9,
+   "n_vertices": 28
+  },
+  {
+   "name": "potato_0090",
+   "food": "potato",
+   "style": "random",
+   "volume_cm3": 7.531,
+   "mass_kg": 0.00715,
+   "extents_mm": [
+    31.0,
+    24.8,
+    21.3
+   ],
+   "min_width_mm": 21.3,
+   "n_vertices": 20
+  },
+  {
+   "name": "potato_0091",
+   "food": "potato",
+   "style": "random",
+   "volume_cm3": 13.115,
+   "mass_kg": 0.01246,
+   "extents_mm": [
+    28.7,
+    31.5,
+    24.0
+   ],
+   "min_width_mm": 24.0,
+   "n_vertices": 60
+  },
+  {
+   "name": "potato_0092",
+   "food": "potato",
+   "style": "dice",
+   "volume_cm3": 11.039,
+   "mass_kg": 0.01049,
+   "extents_mm": [
+    23.6,
+    26.1,
+    18.8
+   ],
+   "min_width_mm": 18.8,
+   "n_vertices": 26
+  },
+  {
+   "name": "potato_0093",
+   "food": "potato",
+   "style": "random",
+   "volume_cm3": 9.972,
+   "mass_kg": 0.00947,
+   "extents_mm": [
+    25.9,
+    34.7,
+    22.6
+   ],
+   "min_width_mm": 22.6,
+   "n_vertices": 52
+  },
+  {
+   "name": "potato_0094",
+   "food": "potato",
+   "style": "random",
+   "volume_cm3": 6.892,
+   "mass_kg": 0.00655,
+   "extents_mm": [
+    27.0,
+    26.5,
+    17.6
+   ],
+   "min_width_mm": 17.6,
+   "n_vertices": 24
+  },
+  {
+   "name": "potato_0095",
+   "food": "potato",
+   "style": "dice",
+   "volume_cm3": 9.158,
+   "mass_kg": 0.0087,
+   "extents_mm": [
+    20.5,
+    24.1,
+    20.0
+   ],
+   "min_width_mm": 20.0,
+   "n_vertices": 32
+  },
+  {
+   "name": "potato_0096",
+   "food": "potato",
+   "style": "random",
+   "volume_cm3": 13.66,
+   "mass_kg": 0.01298,
+   "extents_mm": [
+    30.1,
+    30.9,
+    28.1
+   ],
+   "min_width_mm": 27.3,
+   "n_vertices": 44
+  },
+  {
+   "name": "potato_0097",
+   "food": "potato",
+   "style": "random",
+   "volume_cm3": 9.397,
+   "mass_kg": 0.00893,
+   "extents_mm": [
+    32.3,
+    24.4,
+    20.9
+   ],
+   "min_width_mm": 20.9,
+   "n_vertices": 12
+  },
+  {
+   "name": "potato_0098",
+   "food": "potato",
+   "style": "dice",
+   "volume_cm3": 16.194,
+   "mass_kg": 0.01538,
+   "extents_mm": [
+    27.0,
+    29.5,
+    21.1
+   ],
+   "min_width_mm": 21.1,
+   "n_vertices": 34
+  },
+  {
+   "name": "potato_0099",
+   "food": "potato",
+   "style": "random",
+   "volume_cm3": 5.738,
+   "mass_kg": 0.00545,
+   "extents_mm": [
+    24.8,
+    26.2,
+    18.0
+   ],
+   "min_width_mm": 18.0,
+   "n_vertices": 36
+  }
+ ]
+}

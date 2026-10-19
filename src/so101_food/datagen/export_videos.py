@@ -58,7 +58,10 @@ def _short_name(meta: dict) -> str:
     "carrot_0042"）。
     """
     if meta.get("n_pieces", 1) > 1:
-        return f"{meta['n_pieces']}pieces"
+        # 段階3（言葉で食材を指定）では、指定した食材名も付ける（例: "12pieces_potato"）
+        food = meta.get("target_food")
+        language = food is not None and food in meta.get("task", "")
+        return f"{meta['n_pieces']}pieces" + (f"_{food}" if language else "")
     return meta.get("object", "cube").split()[-1]
 
 

@@ -1,0 +1,219 @@
+# 段階3 実行手順：複数の食材から、指示文で指定した食材の片を鍋に入れる
+
+机の上に、にんじん・じゃがいも・大根の小片を混ぜて **5〜20 個**（エピソードごとにランダム）散らばせ、
+指示文で指定した食材の片のうち **ロボットに一番近い片** を 1 つ掴んで鍋に入れる。指示文は次の 3 通り。
+
+```
+Put the carrot piece closest to the robot into the pot.
+Put the potato piece closest to the robot into the pot.
+Put the daikon piece closest to the robot into the pot.
+```
+
+同じ机の上でも、指示文によって掴む片が変わる。画像だけでは正解が決まらないので、指示文を読める
+VLA（SmolVLA）でなければ解けない。指示文を読まない ACT も同じデータで学習し、比べる。
+
+段階2との違い：
+
+| 項目 | 段階2 | 段階3 |
+|---|---|---|
+| 机の上の片 | にんじん 5〜20 個 | にんじん・じゃがいも・大根を混ぜて 5〜20 個 |
+| 掴む片 | ロボットの根元に一番近い片 | 指示文で指定した食材の片のうち、根元に一番近い片 |
+| 指示文 | 1 通り（`Put the food piece closest to the robot into the pot.`） | 3 通り（上の通り。エピソードごとに食材を選ぶ） |
+| `--task` | `multi` | `lang` |
+| データ名 | `pot_multi_v1`（1,000 エピソード） | `pot_lang_v1`（1,500 エピソード。食材ごとに約 500） |
+| 学習名 | `act_pot_multi_v1` / `smolvla_pot_multi_v1` | `smolvla_pot_lang_v1` / `act_pot_lang_v1` |
+
+## 全体の流れ
+
+| 手順 | インスタンス | 内容 | 所要時間の目安 |
+|---|---|---|---|
+| A | `ml.c5.9xlarge` | 学習データの生成（成功 1,500 エピソード）と動画での確認 | 30〜35 分 |
+| B | `ml.g5.2xlarge` | SmolVLA の学習（20,000 ステップ） | 約 7 時間 |
+| C | `ml.g5.2xlarge`（B のあとそのまま） | ACT の学習（80,000 ステップ）… 比較用 | 約 1 時間 45 分 |
+| D | `ml.c5.9xlarge` | 評価（各 100 エピソード）と比較 | SmolVLA 20 分程度、ACT 5 分程度 |
+
+B は時間が長いので、夕方に始めて翌朝に確認するのがよい。C は B が終わってから始める
+（同じ GPU で 2 つ同時に学習すると、どちらも遅くなる）。C を省くと ACT との比較はできないが、
+SmolVLA の評価（D-1）はできる。
+
+インスタンスの切り替え方は [段階1](step1_howto.md) と同じ（スペースを Stop → Instance を変更 → Run space →
+Open JupyterLab）。起動したら毎回、ターミナル（File → New → Terminal）で次の 3 行を実行する。
+
+```bash
+cd ~/user-default-efs/physical_ai_exam
+git pull
+bash scripts/setup_sagemaker.sh
+```
+
+以下のコマンドは、すべて `~/user-default-efs/physical_ai_exam` で実行する。
+
+## A. 学習データの生成（ml.c5.9xlarge）
+
+### A-1. 生成を始める
+
+```bash
+bash scripts/generate_dataset.sh pot_lang_v1 1500 --task lang
+```
+
+すぐに `裏で実行を始めました（PID ...）。` と表示され、生成は裏で進む
+（ブラウザやターミナルを閉じても止まらない。スペースを Stop すると止まる）。
+
+### A-2. 進み具合を見る
+
+```bash
+tail -f logs/generate_pot_lang_v1_*.log
+```
+
+`[worker 05] 12/42 (試行 12, 410s)` のような行が流れる。`[mp4 @ ...] Starting second pass ...` はお知らせで
+エラーではない。見るのをやめるときは Ctrl+C（生成は止まらない）。
+
+### A-3. 終わったか確認する（30 分ほど後）
+
+ログの最後に `完了: .../data/pot_lang_v1` と出ていれば終わり。結果を確認する。
+
+```bash
+head -30 data/pot_lang_v1/generation_stats.json
+```
+
+- `"episodes": 1500` … 学習に使う成功エピソード数
+- `"expert_success_rate"` … エキスパートの成功率。0.95 以上なら問題なし（開発環境では 199 / 200）
+
+指示文ごとのエピソード数も確認する（食材ごとにおよそ 500 ずつになっていればよい）。
+
+```bash
+grep -o '"target_food": "[a-z]*"' data/pot_lang_v1/episodes_meta.jsonl | sort | uniq -c
+```
+
+### A-4. 生成したデータを動画で見る
+
+```bash
+bash scripts/export_dataset_videos.sh pot_lang_v1 6
+```
+
+1〜3 分で終わる。`view_videos.ipynb` の 1 行目を `FOLDER = "outputs/dataset_videos/pot_lang_v1"` にして
+Run → Run All Cells で再生する。ファイル名は `ep000_13pieces_potato.mp4` のように、片の数と
+**指示文で指定した食材** を表す。
+
+色の見分け方：にんじんは橙色、じゃがいもは薄い黄土色、大根は白に近い色。
+俯瞰カメラでは画面の左上にロボットの根元がある。ファイル名の食材の片のうち、**左上に一番近い片** を掴んで
+鍋に入れていれば正しい（他の食材の片の方が近くにあっても、それは掴まない）。
+
+## B. SmolVLA の学習（ml.g5.2xlarge）
+
+インスタンスを `ml.g5.2xlarge` に切り替え、最初の 3 行を実行する。
+`setup_sagemaker.sh` の最後に `CUDA 利用可能: True（NVIDIA A10G）` と出れば GPU が使える。
+
+```bash
+bash scripts/train_smolvla.sh pot_lang_v1 smolvla_pot_lang_v1
+```
+
+- 設定は段階2の `smolvla_pot_multi_v1` と同じ（合計バッチ 64 × 20,000 ステップ、5,000 ステップごとに保存）。
+  段階2では 6 時間 54 分かかった。
+- 指示文はデータの各フレームに記録されていて、学習スクリプトがそのまま SmolVLA に渡す（設定の追加は不要）。
+- 5 分ほどたったら進み具合を確認する。
+
+  ```bash
+  tail -n 3 logs/train_smolvla_pot_lang_v1_*.log
+  ```
+
+  `step:...  loss:...` の行が出ていれば正常。
+- 学習中はスペースを Stop しないこと（ブラウザは閉じてよい）。アイドルシャットダウンが心配なときは、
+  `notebooks/watch_training.ipynb` の 1 行目を `RUN = "smolvla_pot_lang_v1"` にして Run All Cells しておく。
+- 手元のパソコンから進み具合を見たいときは、学習を始めたあと
+  `bash scripts/sync_progress_s3.sh smolvla_pot_lang_v1 s3://<バケット名>/<フォルダ>` を実行しておく
+  （見方は [vla_howto.md](vla_howto.md) の C と同じ）。
+- 終わったかの確認：
+
+  ```bash
+  ls outputs/train/smolvla_pot_lang_v1/checkpoints/
+  ```
+
+  `020000` と `last` があれば完了。
+
+## C. ACT の学習（ml.g5.2xlarge のまま。比較用）
+
+B が終わってから実行する。
+
+```bash
+bash scripts/train_act.sh pot_lang_v1 act_pot_lang_v1 --steps=80000
+```
+
+- 設定は段階2の `act_pot_multi_v1` と同じ。約 1 時間 45 分。
+- ACT は指示文を入力に使わない（LeRobot の ACT は画像と関節角度だけを読む）。そのため、画像だけから
+  「どの食材を掴むか」を決めることになり、指示文と違う食材を掴む失敗（`wrong_food`）が多くなるはず。
+  これを SmolVLA と比べることで、「指示文を読めること」の効果を見る。
+- 終わったかの確認：`ls outputs/train/act_pot_lang_v1/checkpoints/` に `080000` と `last` があれば完了。
+
+## D. 評価（ml.c5.9xlarge）
+
+インスタンスを `ml.c5.9xlarge` に切り替え、最初の 3 行を実行してから、次を 1 つずつ実行する
+（前のログに `完了` が出てから次へ）。
+
+```bash
+# 1. SmolVLA、初めて見る形（評価用の形状セット）… 本命
+bash scripts/evaluate.sh smolvla_pot_lang_v1 100 --task lang
+
+# 2. ACT、同じ 100 の配置（C を省いた場合は不要）
+bash scripts/evaluate.sh act_pot_lang_v1 100 --task lang
+
+# 3. 結果を並べて比較する（C を省いた場合は act_pot_lang_v1 を消す）
+bash scripts/analyze_eval.sh smolvla_pot_lang_v1 act_pot_lang_v1 --dataset pot_lang_v1
+```
+
+- `--task lang` だけで、評価用の形状セット（にんじん・じゃがいも・大根の `*_test`）を使う。
+  学習で見た形で評価したいときは `--piece-set train --name smolvla_pot_lang_v1_seen` を付ける。
+- 評価は同じ seed から始めるので、SmolVLA と ACT の配置（片の数・形・位置・指示文）はまったく同じになる。
+- 動画は `outputs/eval/<名前>/videos/`（`view_videos.ipynb` の `FOLDER` を変えて再生）。
+
+3 の出力には、評価ごとに次の表が出る。
+
+- 掴む片までの距離ごと・机の上の片の数ごとの、回数・成功率・失敗の内訳
+- **指定した食材ごと** の、回数・成功率・失敗の内訳
+- 結果（成功・掴めず など）ごとの、手先の着地位置のずれ
+
+失敗の内訳の意味：
+
+| 分類 | 表の列 | 意味 |
+|---|---|---|
+| `success` | 成功 | 指定した食材の一番近い片が鍋に入った |
+| `wrong_food` | 別の食材 | 指定と違う食材の片を鍋に入れた・2cm 以上持ち上げた（指示文の取り違え） |
+| `wrong_piece` | 別の片 | 指定した食材だが、一番近くない片を鍋に入れた・持ち上げた |
+| `not_grasped` | 掴めず | 対象の片を持ち上げられなかった |
+| `missed_pot` | 鍋外 | 対象の片を持ち上げたが鍋に入らなかった |
+
+最後の 3 の出力をそのまま共有してもらえれば、結果と考察を `docs/step3_results.md` にまとめる。
+
+## 設計メモ
+
+### じゃがいも・大根の形（`src/so101_food/shapes/`）
+
+にんじんと同じく、元の形をランダムな平面で切って凸多面体を作る（乱切り : 角切り = 2 : 1）。
+
+| 食材 | 元の形 | 色（基本色、片ごとに ±8% 揺らす） |
+|---|---|---|
+| にんじん | 半径 11〜16mm の円柱 | 橙色 |
+| じゃがいも | 半軸 30〜40 / 22〜30 / 20〜26mm の楕円体 | 薄い黄土色 |
+| 大根 | 半径 24〜32mm の円柱 | 白に近い色 |
+
+- 最小幅 15mm 以上・最大寸法 35mm 以下、重心が接地面の端から 3.5mm 以上内側（置いた直後に転がらない）、
+  という条件はにんじんと同じ。どの食材も高さ 15〜29mm、上から見た寸法 17〜35mm で、大きさでは
+  見分けられない（**色で見分ける**）。
+- 学習用 300 個（`assets/pieces/<食材>_train`）と評価用 100 個（`<食材>_test`）を別の seed で作った。
+  シミュレーションに置いて、全 800 個が動かないことを確かめた。
+
+### 片の並べ方と対象の選び方（`src/so101_food/env/pot_task.py`）
+
+- 1 つの環境には、3 食材から 8 個ずつ、計 24 個の片を組み込み、エピソードごとにそのうち 5〜20 個を机に置く
+  （データ生成・評価では 10 試行ごとに選び直す）。置く範囲・片どうしの間隔・開始姿勢は段階2と同じ。
+- 机の上にある食材の中から 1 つを等確率で選び、指示文にする。対象は、その食材の片のうち根元に一番近い片。
+  その食材の中で 2 番目に近い片との差が 1cm 未満の配置は置き直す（段階2と同じ考え方）。
+- 開発環境で 300 配置を調べると、3 食材とも机にある配置が 97%。**対象が「全部の片の中で一番近い片」と
+  一致するのは 29%** だけで、残りは他の食材の片の方が近い。指示文を無視して一番近い片を掴む方法では
+  3 割程度しか成功しない。
+- 対象までの距離は中央値 17.0cm（10〜90% で 14.1〜21.7cm）。段階2（中央値 14.5cm）より遠い。
+  段階2では ACT・SmolVLA とも、遠い片ほど掴み損ねやすかったので、その分難しい。
+
+### エキスパート
+
+段階2と同じ（指示文の食材の一番近い片を、他の片に指を当てない向きで掴む）。開発環境での成功率は、
+学習用・評価用の形あわせて 200 回中 199 回（失敗の 1 回は、持ち上げた片が鍋の外に落ちた）。
