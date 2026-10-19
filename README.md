@@ -17,21 +17,11 @@
 | 2 | 形・大きさがランダムなにんじんの小片を 5〜20 個散らばせ、ロボットに一番近い片を鍋に入れる | 学習・評価まで完了（初めて見る形で成功率 56%。掴む片が遠いと掴み損ねる）。原因を調査中。手順: [docs/step2_howto.md](docs/step2_howto.md)、結果: [docs/step2_results.md](docs/step2_results.md) |
 | 3 | にんじん・じゃがいも・大根の片を混ぜて 5〜20 個散らばせ、指示文で指定した食材の一番近い片を鍋に入れる（SmolVLA と、指示文を読まない ACT を比較） | 実装完了。データ生成・学習・評価はこれから。手順: [docs/step3_howto.md](docs/step3_howto.md) |
 | 4 | 動画・レポート・リポジトリ整理 | 未着手 |
-| ― | ACT を VLA（SmolVLA）に置き換える（段階2のデータで学習し、ACT と比較） | 学習・評価まで完了（初めて見る形で成功率 40%。ACT は 56%）。改善の検討中。結果: [docs/vla_results.md](docs/vla_results.md)。手順: [docs/vla_howto.md](docs/vla_howto.md) |
+| ― | ACT を VLA（SmolVLA）に置き換える（段階2のデータで学習し、ACT と比較） | 学習・評価まで完了（初めて見る形で成功率 40%。ACT は 56%。推論し直す間隔を短くしても改善せず 28%）。結果: [docs/vla_results.md](docs/vla_results.md)。手順: [docs/vla_howto.md](docs/vla_howto.md) |
 
 ## 次回の作業
 
-1. 段階2の SmolVLA を、推論し直す間隔を短くして評価する（`ml.c5.9xlarge`。学習し直しは不要）。
-
-   ```bash
-   bash scripts/evaluate.sh smolvla_pot_multi_v1 100 --task multi --n-action-steps 25 --name smolvla_pot_multi_v1_n25
-   # ↑ が終わってから
-   bash scripts/evaluate.sh smolvla_pot_multi_v1 100 --task multi --n-action-steps 10 --name smolvla_pot_multi_v1_n10
-   # ↑ が終わってから
-   bash scripts/analyze_eval.sh smolvla_pot_multi_v1 smolvla_pot_multi_v1_n25 smolvla_pot_multi_v1_n10
-   ```
-
-2. 段階3（データ生成 → SmolVLA・ACT の学習 → 評価）。手順は [docs/step3_howto.md](docs/step3_howto.md)。
+段階3（データ生成 → SmolVLA・ACT の学習 → 評価）。手順は [docs/step3_howto.md](docs/step3_howto.md)。
 
 ACT の改善（掴む片が遠いと掴み損ねる原因の調査）は保留中。手順は [docs/step2_results.md](docs/step2_results.md) の 7。
 
