@@ -5,6 +5,9 @@
 ``outputs/eval/<名前>/episodes.csv`` を読み、掴む片（評価開始時の位置）からロボットの根元までの
 距離ごと・机の上の片の数ごとに成功率と失敗の内訳を表にする。``--dataset`` を付けると、
 学習データで掴んだ片までの距離の分布も並べる（学習データに少ない位置で失敗していないかを見る）。
+
+評価に手先の着地位置の記録（``land_*``）があれば、区間ごとに「着地のずれ」（水平距離の平均）と
+「半径方向のずれ」（根元 → 片の向きの平均。負なら片より手前＝根元側）も表示する [mm]。
 """
 
 from __future__ import annotations
@@ -50,7 +53,10 @@ def _table(
     groups: list[list[dict]] = [[] for _ in labels]
     for r in rows:
         groups[_bin(key(r), edges)].append(r)
+    landing = "land_err_mm" in rows[0]
     header = f"  {title:<12} 回数  成功率  " + "  ".join(f"{REASON_LABELS[k]}" for k in REASONS[1:])
+    if landing:
+        header += "  着地のずれ  半径方向"
     lines = [header]
     for label, group in zip(labels, groups, strict=True):
         if not group:
@@ -58,7 +64,12 @@ def _table(
         reasons = Counter(r["reason"] for r in group)
         rate = reasons["success"] / len(group)
         fails = "  ".join(f"{reasons[k]:>4}" for k in REASONS[1:])
-        lines.append(f"  {label:<12} {len(group):>4}  {rate:>5.0%}   {fails}")
+        line = f"  {label:<12} {len(group):>4}  {rate:>5.0%}   {fails}"
+        if landing:
+            err = sum(float(r["land_err_mm"]) for r in group) / len(group)
+            radial = sum(float(r["land_radial_mm"]) for r in group) / len(group)
+            line += f"   {err:>7.1f}   {radial:>+7.1f}"
+        lines.append(line)
     return lines
 
 

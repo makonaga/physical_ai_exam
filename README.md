@@ -14,25 +14,23 @@
 |---|---|---|
 | 0 | 環境構築、グリッパ寸法・作業領域の確認、把持できるかの確認 | 完了。結果: [docs/step0_notes.md](docs/step0_notes.md) |
 | 1 | 立方体 1 個でエキスパート → データ生成 → ACT 学習 → 評価 | 完了（成功率 82%）。手順: [docs/step1_howto.md](docs/step1_howto.md)、結果: [docs/step1_results.md](docs/step1_results.md) |
-| 2 | 形・大きさがランダムなにんじんの小片を 5〜20 個散らばせ、ロボットに一番近い片を鍋に入れる | 学習・評価まで完了（初めて見る形で成功率 56%）。改善の検討中。手順: [docs/step2_howto.md](docs/step2_howto.md)、結果: [docs/step2_results.md](docs/step2_results.md) |
+| 2 | 形・大きさがランダムなにんじんの小片を 5〜20 個散らばせ、ロボットに一番近い片を鍋に入れる | 学習・評価まで完了（初めて見る形で成功率 56%。掴む片が遠いと掴み損ねる）。原因を調査中。手順: [docs/step2_howto.md](docs/step2_howto.md)、結果: [docs/step2_results.md](docs/step2_results.md) |
 | 3 | 複数食材（じゃがいも・大根）と言葉による指示、分布外評価、薄切りの失敗デモ | 未着手 |
 | 4 | 動画・レポート・リポジトリ整理 | 未着手 |
 | ― | ACT を VLA に置き換える | 未着手 |
 
 ## 次回の作業（段階2の続き）
 
-`ml.c5.9xlarge` で、推論のしかたを変えた評価を 2 つ行い、結果を分析する
-（詳しくは [docs/step2_howto.md](docs/step2_howto.md) の C-2・C-3）。
+掴む片が遠いと掴み損ねる原因を調べる。`ml.c5.9xlarge` で、手先の着地位置を記録する評価をやり直し
+（先頭 20 エピソードの動画も保存）、分析する。結果は [docs/step2_results.md](docs/step2_results.md)。
 
 ```bash
 cd ~/user-default-efs/physical_ai_exam
 git pull
 bash scripts/setup_sagemaker.sh
-bash scripts/evaluate.sh act_pot_multi_v1 100 --task multi --n-action-steps 10 --name act_pot_multi_v1_n10
+bash scripts/evaluate.sh act_pot_multi_v1 100 --task multi --videos 20 --name act_pot_multi_v1_diag
 # ↑ が終わってから
-bash scripts/evaluate.sh act_pot_multi_v1 100 --task multi --temporal-ensemble 0.01 --name act_pot_multi_v1_te
-# ↑ が終わってから
-bash scripts/analyze_eval.sh act_pot_multi_v1 act_pot_multi_v1_seen act_pot_multi_v1_n10 act_pot_multi_v1_te --dataset pot_multi_v1
+bash scripts/analyze_eval.sh act_pot_multi_v1_diag
 ```
 
 ## ドキュメント

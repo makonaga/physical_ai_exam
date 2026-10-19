@@ -17,6 +17,10 @@
 複数片のときの配置は、学習データと同じく「エキスパートなら他の片に指を当てずに掴める」
 ものだけを使う（エキスパートは配置の確認にだけ使い、ロボットは動かさない）。
 
+``episodes.csv`` には、手先（TCP）が一番低くなった位置（＝掴もうとした位置）と、掴む片の初期位置との
+ずれも記録する（``land_err_mm``: 水平距離、``land_radial_mm``: ロボットの根元から片へ向かう方向の
+ずれで、正なら片より遠く・負なら手前、``land_tangent_mm``: それと直交する方向のずれ）。
+
 結果は ``outputs/eval/<name>/`` に ``summary.json``・``episodes.csv``・動画として保存する。
 学習データの seed（0 から数百）と重ならないよう、評価の seed は 100000 から始める。
 """
@@ -87,6 +91,7 @@ def _evaluate_chunk(job: dict) -> list[dict]:
         obj_pose0 = env.object_pose()
         record = index < job["videos"]
         frames, info, success_since = [], {}, None
+        land_z, land_xy = np.inf, obj_pose0[:2].copy()  # 手先が一番低くなった高さと位置
         step = 0
         for step in range(1, job["max_steps"] + 1):
             images = rig.render(env.data.qpos)
@@ -105,6 +110,9 @@ def _evaluate_chunk(job: dict) -> list[dict]:
             target = np.clip(from_dataset_units(action.squeeze(0).cpu().numpy()), low, high)
             for _ in range(FRAME_SKIP):
                 _, _, _, _, info = env.step(target)
+            tcp = env._get_tcp_pose()[:3]
+            if tcp[2] < land_z:
+                land_z, land_xy = float(tcp[2]), tcp[:2].copy()
             # 鍋に入ってから一定時間たったら打ち切る（そのまま入っていれば成功のまま）
             if info["success"]:
                 success_since = step if success_since is None else success_since
@@ -113,6 +121,9 @@ def _evaluate_chunk(job: dict) -> list[dict]:
             else:
                 success_since = None
         reason = failure_reason(info)
+        # 掴もうとした位置のずれを、根元 → 片の向き（半径方向）とそれに直交する向きに分ける
+        radial_dir = obj_pose0[:2] / np.linalg.norm(obj_pose0[:2])
+        offset = (land_xy - obj_pose0[:2]) * 1e3
         result = {
             "episode": index,
             "seed": seed,
@@ -125,6 +136,10 @@ def _evaluate_chunk(job: dict) -> list[dict]:
             "ever_grasped": bool(info["ever_grasped"]),
             "obj_x": round(float(obj_pose0[0]), 4),
             "obj_y": round(float(obj_pose0[1]), 4),
+            "land_z_mm": round(land_z * 1e3, 1),
+            "land_err_mm": round(float(np.linalg.norm(offset)), 1),
+            "land_radial_mm": round(float(offset @ radial_dir), 1),
+            "land_tangent_mm": round(float(offset @ [-radial_dir[1], radial_dir[0]]), 1),
             "time_s": round(time.time() - t0, 1),
         }
         if record:
