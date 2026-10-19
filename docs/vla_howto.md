@@ -97,7 +97,19 @@ GPU が 4 個ある `ml.g5.12xlarge`（A10G × 4、48 vCPU、メモリ 192GB）�
 合計の料金は 1.5 倍程度。インスタンスの一覧に `ml.g5.12xlarge` が出ない場合は、AWS の Service Quotas で
 SageMaker の「Studio JupyterLab Apps running on ml.g5.12xlarge instance」の上限を 1 以上に申請する。
 
-インスタンスを切り替えたら、`cd` / `git pull` / `setup_sagemaker.sh` の 3 行を実行してから次を実行する。
+GPU インスタンスは混み合っていて起動できない（`EC2InsufficientCapacityError`）ことがある。その場合は次から選ぶ
+（学習時間は試運転の A10G の速さと、GPU の一般的な性能比から見積もったもの）。
+
+| インスタンス | GPU | 学習時間の見込み | 備考 |
+|---|---|---|---|
+| `ml.g5.12xlarge` | A10G 24GB × 4 | 2〜2.5 時間 | |
+| `ml.g6e.xlarge` | L40S 48GB × 1 | 3〜4 時間 | GPU 1 個なので仕組みが試運転と同じ。料金は `ml.g5.xlarge` の約 2 倍 |
+| `ml.g6.12xlarge` | L4 24GB × 4 | 3〜4 時間 | L4 は 1 個あたり A10G よりやや遅い |
+| `ml.g5.xlarge` | A10G 24GB × 1 | 約 7 時間 | 試運転と同じ |
+| `ml.g6.xlarge` | L4 24GB × 1 | 7 時間以上 | `ml.g5.xlarge` より速くならないので使わない |
+
+インスタンスを切り替えたら、`cd` / `git pull` / `setup_sagemaker.sh` の 3 行を実行してから次を実行する
+（どのインスタンスでも同じコマンド。GPU の数はスクリプトが数える）。
 
 ```bash
 bash scripts/train_smolvla.sh pot_multi_v1 smolvla_pot_multi_v1
