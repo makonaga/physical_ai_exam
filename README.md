@@ -95,6 +95,7 @@ ACT の改善（掴む片が遠いと掴み損ねる原因の調査）は保留�
 | `scripts/train_smolvla.sh <データ名> <実行名> [--steps=...]` | SmolVLA（VLA）の追加学習 | GPU |
 | `scripts/evaluate.sh <実行名> <エピソード数> [--task ...]` | 学習済みポリシーの評価（並列） | CPU（vCPU が多いもの） |
 | `scripts/analyze_eval.sh <評価名...> [--dataset <データ名>]` | 評価結果を距離・片の数ごとに比較する | どれでも |
+| `scripts/sync_progress_s3.sh <実行名> <S3 のコピー先>` | 学習の進み具合を 5 分ごとに S3 にコピーする（手元のパソコンから AWS CLI で確認するため） | 学習中のインスタンス |
 
 ## ノートブック
 

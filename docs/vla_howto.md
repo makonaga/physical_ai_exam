@@ -130,6 +130,11 @@ bash scripts/train_smolvla.sh pot_multi_v1 smolvla_pot_multi_v1
   自動停止の対象になりにくい（ブラウザを閉じてもセルは動き続ける）。進み具合も 1 分ごとに表示される。
 - 途中で止まったときは、`scripts/train_smolvla.sh` の先頭のコメントにある方法で、最後に保存した
   チェックポイント（5,000 ステップごと）から再開できる。
+- 手元のパソコンから進み具合を見たいときは、学習を始めたあと SageMaker のターミナルで
+  `bash scripts/sync_progress_s3.sh smolvla_pot_multi_v1 s3://<バケット名>/<フォルダ>` を実行しておく。
+  5 分ごとに `<フォルダ>/smolvla_pot_multi_v1_progress.txt` に最新の進み具合が書かれるので、手元では
+  `aws s3 cp s3://<バケット名>/<フォルダ>/smolvla_pot_multi_v1_progress.txt -` で見られる
+  （手元に AWS CLI と、そのバケットを読める認証情報が必要）。
 
 ## D. 評価と ACT との比較（ml.g5.12xlarge のまま、または ml.c5.9xlarge）
 
