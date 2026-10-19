@@ -36,6 +36,7 @@ from dataclasses import replace
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[3]
+VLA_TYPES = ("smolvla", "pi0", "pi05", "pi0_fast", "groot", "xvla")
 
 
 def _load_policy(path: str, n_action_steps: int | None, temporal_ensemble: float | None):
@@ -44,6 +45,10 @@ def _load_policy(path: str, n_action_steps: int | None, temporal_ensemble: float
 
     cfg = PreTrainedConfig.from_pretrained(path)
     cfg.device = "cpu"
+    if getattr(cfg, "load_vlm_weights", False):
+        # VLA（SmolVLA）: 土台の VLM の重みも学習済みモデルに含まれているので、別に読み込まない
+        # （読み込むと bfloat16 になり、CPU では遅い。ここでは全体を float32 で動かす）
+        cfg.load_vlm_weights = False
     if temporal_ensemble is not None:
         cfg.temporal_ensemble_coeff = temporal_ensemble
         cfg.n_action_steps = 1
@@ -177,7 +182,9 @@ def main(argv: list[str] | None = None) -> None:
     )
     ap.add_argument("--name", required=True, help="結果の保存名（outputs/eval/<name>）")
     ap.add_argument("--episodes", type=int, default=50)
-    ap.add_argument("--workers", type=int, default=default_workers())
+    ap.add_argument(
+        "--workers", type=int, default=None, help="並列数（既定: CPU 数。VLA は 12 まで）"
+    )
     ap.add_argument("--seed", type=int, default=100000, help="評価の seed の開始値")
     ap.add_argument("--videos", type=int, default=6, help="動画を保存するエピソード数（先頭から）")
     ap.add_argument(
@@ -205,7 +212,12 @@ def main(argv: list[str] | None = None) -> None:
     ap.add_argument(
         "--temporal-ensemble", type=float, default=None, help="ACT の時間的アンサンブル係数"
     )
-    ap.add_argument("--torch-threads", type=int, default=1)
+    ap.add_argument(
+        "--torch-threads",
+        type=int,
+        default=None,
+        help="1 並列あたりのスレッド数（既定: 1。VLA は 3）",
+    )
     ap.add_argument("--out-dir", type=Path, default=REPO / "outputs" / "eval")
     args = ap.parse_args(argv)
     task = TaskSpec(
@@ -222,6 +234,15 @@ def main(argv: list[str] | None = None) -> None:
     out.mkdir(parents=True, exist_ok=True)
     policy = str(Path(args.policy).resolve())
     prepare_workers()
+    # VLA は 1 並列あたりのメモリが大きく（約 3GB）推論も重いので、並列数を減らしてスレッドを増やす
+    import lerobot.policies  # noqa: F401  ポリシーの種類（act, smolvla など）を登録する
+    from lerobot.configs.policies import PreTrainedConfig
+
+    is_vla = PreTrainedConfig.from_pretrained(policy).type in VLA_TYPES
+    if args.workers is None:
+        args.workers = min(default_workers(), 12) if is_vla else default_workers()
+    if args.torch_threads is None:
+        args.torch_threads = 3 if is_vla else 1
     workers = max(1, min(args.workers, args.episodes))
     episodes = [(i, args.seed + i) for i in range(args.episodes)]
     jobs = [

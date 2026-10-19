@@ -4,7 +4,7 @@
 スクリプテッド・エキスパートが自動生成したデータから、LeRobot の模倣学習（ACT）で獲得する。
 
 - ロボット: SO-101（[so101-nexus](https://github.com/johnsutor/so101-nexus) の MuJoCo モデル・環境を土台に使用）
-- 学習: [LeRobot](https://github.com/huggingface/lerobot)（ACT。のちに VLA へ置き換える予定）
+- 学習: [LeRobot](https://github.com/huggingface/lerobot)（ACT と、VLA の SmolVLA）
 - 実行環境: Amazon SageMaker Studio（JupyterLab）。データ生成・評価は CPU インスタンス（`ml.c5.9xlarge`）、
   学習は GPU インスタンス（`ml.g5.xlarge`）
 
@@ -17,21 +17,23 @@
 | 2 | 形・大きさがランダムなにんじんの小片を 5〜20 個散らばせ、ロボットに一番近い片を鍋に入れる | 学習・評価まで完了（初めて見る形で成功率 56%。掴む片が遠いと掴み損ねる）。原因を調査中。手順: [docs/step2_howto.md](docs/step2_howto.md)、結果: [docs/step2_results.md](docs/step2_results.md) |
 | 3 | 複数食材（じゃがいも・大根）と言葉による指示、分布外評価、薄切りの失敗デモ | 未着手 |
 | 4 | 動画・レポート・リポジトリ整理 | 未着手 |
-| ― | ACT を VLA に置き換える | 未着手 |
+| ― | ACT を VLA（SmolVLA）に置き換える（段階2のデータで学習し、ACT と比較） | 実装済み（SageMaker での試運転待ち）。手順: [docs/vla_howto.md](docs/vla_howto.md) |
 
-## 次回の作業（段階2の続き）
+## 次回の作業（VLA の試運転）
 
-掴む片が遠いと掴み損ねる原因を調べる。`ml.c5.9xlarge` で、手先の着地位置を記録する評価をやり直し
-（先頭 20 エピソードの動画も保存）、分析する。結果は [docs/step2_results.md](docs/step2_results.md)。
+段階2のデータで SmolVLA を学習する。まず `ml.g5.xlarge` で試運転（200 ステップの学習と 2 エピソードの評価）をして、
+動くことと速さを確かめる（詳しくは [docs/vla_howto.md](docs/vla_howto.md) の A・B）。
 
 ```bash
 cd ~/user-default-efs/physical_ai_exam
 git pull
 bash scripts/setup_sagemaker.sh
-bash scripts/evaluate.sh act_pot_multi_v1 100 --task multi --videos 20 --name act_pot_multi_v1_diag
-# ↑ が終わってから
-bash scripts/analyze_eval.sh act_pot_multi_v1_diag
+bash scripts/train_smolvla.sh pot_multi_v1 smolvla_trial --steps=200 --save_freq=200 --log_freq=20
+# ↑ のログに End of training が出てから
+bash scripts/evaluate.sh smolvla_trial 2 --task multi --max-steps 100 --videos 1 --workers 2 --torch-threads 2
 ```
+
+ACT の改善（掴む片が遠いと掴み損ねる原因の調査）は保留中。手順は [docs/step2_results.md](docs/step2_results.md) の 7。
 
 ## ドキュメント
 
@@ -43,6 +45,7 @@ bash scripts/analyze_eval.sh act_pot_multi_v1_diag
 | [docs/step1_results.md](docs/step1_results.md) | 段階1: 結果（データ生成・学習・評価） |
 | [docs/step2_howto.md](docs/step2_howto.md) | 段階2: 実行手順と設計メモ（食材片の形・並べ方・開始姿勢・エキスパートの掴み方） |
 | [docs/step2_results.md](docs/step2_results.md) | 段階2: 結果（学習・評価）と考察 |
+| [docs/vla_howto.md](docs/vla_howto.md) | VLA（SmolVLA）: 選んだ理由、学習・評価の手順 |
 
 ## セットアップ（SageMaker Studio）
 
@@ -91,6 +94,7 @@ bash scripts/analyze_eval.sh act_pot_multi_v1_diag
 | `scripts/generate_dataset.sh <名前> <エピソード数> [--task ...]` | エキスパートで学習データを生成（並列） | CPU（vCPU が多いもの） |
 | `scripts/export_dataset_videos.sh <名前> [本数]` | 生成したデータを再生用の動画に書き出す | どれでも |
 | `scripts/train_act.sh <データ名> <実行名> [--steps=...]` | ACT の学習 | GPU |
+| `scripts/train_smolvla.sh <データ名> <実行名> [--steps=...]` | SmolVLA（VLA）の追加学習 | GPU |
 | `scripts/evaluate.sh <実行名> <エピソード数> [--task ...]` | 学習済みポリシーの評価（並列） | CPU（vCPU が多いもの） |
 | `scripts/analyze_eval.sh <評価名...> [--dataset <データ名>]` | 評価結果を距離・片の数ごとに比較する | どれでも |
 
@@ -111,7 +115,8 @@ bash scripts/analyze_eval.sh act_pot_multi_v1_diag
 │   ├── shapes/    # 食材片の形状生成器（円柱・楕円体をランダムな平面で切った凸多面体）
 │   ├── env/       # 鍋投入タスクの環境（食材片の並べ方を含む）、カメラ（俯瞰・手首）の描画
 │   ├── datagen/   # 成功フィルタ付きデータ生成（並列、LeRobot v3 形式）、動画への書き出し
-│   └── eval/      # 学習済みポリシーの評価（並列）
+│   ├── vla/       # VLA の追加学習の補助（カメラ名の対応付け）
+│   └── eval/      # 学習済みポリシーの評価（並列）、評価結果の分析
 ├── assets/pieces/ # 事前生成した食材片の形状セット（学習用 300 個・評価用 100 個）
 ├── notebooks/     # SageMaker で実行するノートブック
 ├── scripts/       # セットアップ・データ生成・学習・評価のスクリプト
@@ -138,4 +143,5 @@ python -m pytest -q
 
 - [so101-nexus](https://github.com/johnsutor/so101-nexus)（Apache-2.0）: SO-101 の MJCF、MuJoCo 環境
 - [LeRobot](https://github.com/huggingface/lerobot)（Apache-2.0）: データセット形式、ACT の学習
+- [SmolVLA](https://huggingface.co/lerobot/smolvla_base)（Apache-2.0）: 事前学習済みの VLA。土台は [SmolVLM2](https://huggingface.co/HuggingFaceTB/SmolVLM2-500M-Video-Instruct)（Apache-2.0）
 - [MuJoCo](https://github.com/google-deepmind/mujoco)（Apache-2.0）
