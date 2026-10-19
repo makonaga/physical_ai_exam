@@ -29,8 +29,8 @@ SmolVLA の中身と、学習するところ：
 |---|---|---|---|
 | A | `ml.g5.xlarge` | 準備（追加パッケージのインストール） | 数分 |
 | B | `ml.g5.xlarge` | 試運転（200 ステップの学習と 2 エピソードの評価）で、動くことと速さを確かめる | 20〜30 分 |
-| C | `ml.g5.xlarge` | 本番の学習（バッチ 64 × 20,000 ステップ） | 約 7 時間 |
-| D | `ml.c5.9xlarge` | 評価（100 エピソード × 2）と ACT との比較 | 1 種類あたり 10 分程度 |
+| C | `ml.g5.12xlarge`（または `ml.g5.xlarge`） | 本番の学習（合計バッチ 64 × 20,000 ステップ） | 2〜2.5 時間（`ml.g5.xlarge` なら約 7 時間） |
+| D | `ml.g5.12xlarge` のまま（または `ml.c5.9xlarge`） | 評価（100 エピソード × 2）と ACT との比較 | 1 種類あたり 10 分程度 |
 
 以下のコマンドは、すべて `~/user-default-efs/physical_ai_exam` で実行する。
 
@@ -90,23 +90,35 @@ tail -n 3 logs/eval_smolvla_trial_*.log
 rm -rf outputs/train/smolvla_trial outputs/eval/smolvla_trial
 ```
 
-## C. 本番の学習（ml.g5.xlarge）
+## C. 本番の学習（ml.g5.12xlarge 推奨）
+
+GPU が 4 個ある `ml.g5.12xlarge`（A10G × 4、48 vCPU、メモリ 192GB）を使うと、4 個の GPU で並列に学習して
+2〜2.5 時間で終わる（`ml.g5.xlarge` だと約 7 時間）。1 時間あたりの料金は約 5 倍だが、時間が約 1/3 になるので、
+合計の料金は 1.5 倍程度。インスタンスの一覧に `ml.g5.12xlarge` が出ない場合は、AWS の Service Quotas で
+SageMaker の「Studio JupyterLab Apps running on ml.g5.12xlarge instance」の上限を 1 以上に申請する。
+
+インスタンスを切り替えたら、`cd` / `git pull` / `setup_sagemaker.sh` の 3 行を実行してから次を実行する。
 
 ```bash
-bash scripts/train_smolvla.sh pot_multi_v1 smolvla_pot_multi_v1 --batch_size=64 --steps=20000 --save_freq=5000
+bash scripts/train_smolvla.sh pot_multi_v1 smolvla_pot_multi_v1
 ```
 
-- バッチ 64 × 20,000 ステップは、lerobot の SmolVLA の手順と同じ設定（使うサンプル数の合計は ACT の学習と同じ 128 万）。
-- 試運転（バッチ 32）では 1 ステップ 0.63 秒（1 秒あたり 50 サンプル）、GPU メモリ 7.7GB だったので、
-  約 7 時間かかる見込み。
+- スクリプトが GPU の数を数えて、全部の GPU で学習する。最初に
+  `GPU 4 個で学習します（1 GPU あたりのバッチ 16、合計 64）。` のように表示される。
+- 合計バッチ 64 × 20,000 ステップは、lerobot の SmolVLA の手順と同じ設定（使うサンプル数の合計は ACT の学習と同じ 128 万）。
+  GPU の数を変えても、合計バッチとステップ数は同じなので、同じ学習になる。
+- 試運転（A10G 1 個、バッチ 32）では 1 ステップ 0.63 秒（1 秒あたり 50 サンプル）、GPU メモリ 7.7GB だった。
 - 5,000 ステップごとにモデルが保存される（`outputs/train/smolvla_pot_multi_v1/checkpoints/`）。
-- 進み具合: `tail -n 3 logs/train_smolvla_pot_multi_v1_*.log`
+- 進み具合: `tail -n 3 logs/train_smolvla_pot_multi_v1_*.log`。始まって 5 分ほどたったら一度見て、
+  `step:...` の行が出ていること（エラーで止まっていないこと）を確認する。
 - 学習中はスペースを Stop しないこと（Stop すると学習も止まる）。
 - 途中で止まったときは、`scripts/train_smolvla.sh` の先頭のコメントにある方法で再開できる。
 
-## D. 評価と ACT との比較（ml.c5.9xlarge）
+## D. 評価と ACT との比較（ml.g5.12xlarge のまま、または ml.c5.9xlarge）
 
-インスタンスを `ml.c5.9xlarge` に切り替え、`cd` / `git pull` / `setup_sagemaker.sh` の 3 行を実行してから、
+評価は CPU で行う（シミュレーションの描画も CPU）。`ml.g5.12xlarge` は vCPU が 48 あるので、学習が終わったら
+そのまま評価してよい（`ml.g5.xlarge` で学習した場合は、vCPU が 4 しかないので `ml.c5.9xlarge` に切り替え、
+`cd` / `git pull` / `setup_sagemaker.sh` の 3 行を実行してから評価する）。
 次を 1 つずつ実行する（前のログに `完了` が出てから次へ）。
 
 ```bash
