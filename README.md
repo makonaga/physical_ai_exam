@@ -14,35 +14,26 @@
 |---|---|---|
 | 0 | 環境構築、グリッパ寸法・作業領域の確認、把持できるかの確認 | 完了。結果: [docs/step0_notes.md](docs/step0_notes.md) |
 | 1 | 立方体 1 個でエキスパート → データ生成 → ACT 学習 → 評価 | 完了（成功率 82%）。手順: [docs/step1_howto.md](docs/step1_howto.md)、結果: [docs/step1_results.md](docs/step1_results.md) |
-| 2 | 形・大きさがランダムなにんじんの小片を 5〜20 個散らばせ、ロボットに一番近い片を鍋に入れる | データ生成（成功 1,000 エピソード）と動画での確認まで完了。次は学習。手順: [docs/step2_howto.md](docs/step2_howto.md) |
+| 2 | 形・大きさがランダムなにんじんの小片を 5〜20 個散らばせ、ロボットに一番近い片を鍋に入れる | 学習・評価まで完了（初めて見る形で成功率 56%）。改善の検討中。手順: [docs/step2_howto.md](docs/step2_howto.md)、結果: [docs/step2_results.md](docs/step2_results.md) |
 | 3 | 複数食材（じゃがいも・大根）と言葉による指示、分布外評価、薄切りの失敗デモ | 未着手 |
 | 4 | 動画・レポート・リポジトリ整理 | 未着手 |
 | ― | ACT を VLA に置き換える | 未着手 |
 
 ## 次回の作業（段階2の続き）
 
-詳しい手順と結果の見方は [docs/step2_howto.md](docs/step2_howto.md) の B・C。
+`ml.c5.9xlarge` で、推論のしかたを変えた評価を 2 つ行い、結果を分析する
+（詳しくは [docs/step2_howto.md](docs/step2_howto.md) の C-2・C-3）。
 
-1. **学習**（`ml.g5.xlarge`、約 1 時間 45 分）
-
-   ```bash
-   cd ~/user-default-efs/physical_ai_exam
-   git pull
-   bash scripts/setup_sagemaker.sh
-   bash scripts/train_act.sh pot_multi_v1 act_pot_multi_v1 --steps=80000
-   ```
-
-2. **評価**（`ml.c5.9xlarge`、各 5 分程度。1 つ目が終わってから 2 つ目を実行）
-
-   ```bash
-   cd ~/user-default-efs/physical_ai_exam
-   git pull
-   bash scripts/setup_sagemaker.sh
-   bash scripts/evaluate.sh act_pot_multi_v1 100 --task multi
-   bash scripts/evaluate.sh act_pot_multi_v1 100 --task multi --piece-set carrot_train --name act_pot_multi_v1_seen
-   ```
-
-3. 生成・学習・評価の結果を `docs/step2_results.md` にまとめる。
+```bash
+cd ~/user-default-efs/physical_ai_exam
+git pull
+bash scripts/setup_sagemaker.sh
+bash scripts/evaluate.sh act_pot_multi_v1 100 --task multi --n-action-steps 10 --name act_pot_multi_v1_n10
+# ↑ が終わってから
+bash scripts/evaluate.sh act_pot_multi_v1 100 --task multi --temporal-ensemble 0.01 --name act_pot_multi_v1_te
+# ↑ が終わってから
+bash scripts/analyze_eval.sh act_pot_multi_v1 act_pot_multi_v1_seen act_pot_multi_v1_n10 act_pot_multi_v1_te --dataset pot_multi_v1
+```
 
 ## ドキュメント
 
@@ -53,6 +44,7 @@
 | [docs/step1_howto.md](docs/step1_howto.md) | 段階1: SageMaker での実行手順（インスタンスの切り替え方を含む） |
 | [docs/step1_results.md](docs/step1_results.md) | 段階1: 結果（データ生成・学習・評価） |
 | [docs/step2_howto.md](docs/step2_howto.md) | 段階2: 実行手順と設計メモ（食材片の形・並べ方・開始姿勢・エキスパートの掴み方） |
+| [docs/step2_results.md](docs/step2_results.md) | 段階2: 結果（学習・評価）と考察 |
 
 ## セットアップ（SageMaker Studio）
 
@@ -102,6 +94,7 @@
 | `scripts/export_dataset_videos.sh <名前> [本数]` | 生成したデータを再生用の動画に書き出す | どれでも |
 | `scripts/train_act.sh <データ名> <実行名> [--steps=...]` | ACT の学習 | GPU |
 | `scripts/evaluate.sh <実行名> <エピソード数> [--task ...]` | 学習済みポリシーの評価（並列） | CPU（vCPU が多いもの） |
+| `scripts/analyze_eval.sh <評価名...> [--dataset <データ名>]` | 評価結果を距離・片の数ごとに比較する | どれでも |
 
 ## ノートブック
 

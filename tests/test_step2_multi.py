@@ -79,3 +79,27 @@ def test_expert_puts_nearest_piece_into_pot(multi_env):
     for r in records:
         if r.success:
             assert r.info["others_in_pot"] == 0  # 入れたのは対象の片だけ
+
+
+def test_analyze_eval_tables(tmp_path):
+    import csv
+    import json
+
+    from so101_food.eval.analyze import summarize_dataset, summarize_eval
+
+    (tmp_path / "ev").mkdir()
+    rows = [
+        {"reason": "success", "n_pieces": 5, "obj_x": 0.13, "obj_y": 0.0},
+        {"reason": "not_grasped", "n_pieces": 20, "obj_x": 0.19, "obj_y": 0.0},
+    ]
+    with open(tmp_path / "ev" / "episodes.csv", "w", newline="") as f:
+        writer = csv.DictWriter(f, fieldnames=list(rows[0]))
+        writer.writeheader()
+        writer.writerows(rows)
+    text = "\n".join(summarize_eval("ev", tmp_path))
+    assert "成功率 50%" in text
+    assert "〜14cm" in text and "18cm〜" in text and "〜9個" in text and "20個〜" in text
+    (tmp_path / "ds").mkdir()
+    meta = {"episode_index": 0, "obj_pose0": [0.145, 0.0, 0.01, 1, 0, 0, 0]}
+    (tmp_path / "ds" / "episodes_meta.jsonl").write_text(json.dumps(meta) + "\n")
+    assert "14〜15cm 100%" in "\n".join(summarize_dataset("ds", tmp_path))

@@ -166,13 +166,34 @@ cat outputs/eval/act_pot_multi_v1_seen/summary.json
 動画は先頭 6 エピソード分が `outputs/eval/<名前>/videos/` に保存される。`view_videos.ipynb` の 1 行目を
 `FOLDER = "outputs/eval/act_pot_multi_v1/videos"` に変えて Run All Cells で再生できる。
 
-## 結果の共有
+### C-2. 推論のしかたを変えた評価（学習し直さずに試せる）
 
-次の 3 つを貼ってもらえれば、`docs/step2_results.md` にまとめる。
+ACT は 50 ステップ（2 秒）分の行動をまとめて出す。既定ではそれを出し切ってから次を推論するが、
+こまめに推論し直すと、掴む直前の位置合わせが良くなることがある。次の 2 つも 1 つずつ実行する
+（1 つ目は 5 分程度、2 つ目は毎ステップ推論するので 10 分程度）。
 
-1. `head -30 data/pot_multi_v1/generation_stats.json`（A）
-2. `grep "step:80K" logs/train_act_pot_multi_v1_*.log | tail -n 1`（B）
-3. 2 つの評価の `summary.json`（C）
+```bash
+# 10 ステップ（0.4 秒）ごとに推論し直す
+bash scripts/evaluate.sh act_pot_multi_v1 100 --task multi --n-action-steps 10 --name act_pot_multi_v1_n10
+
+# 毎ステップ推論し、重なった行動を重み付き平均する（ACT の論文の方法）
+bash scripts/evaluate.sh act_pot_multi_v1 100 --task multi --temporal-ensemble 0.01 --name act_pot_multi_v1_te
+```
+
+### C-3. 結果をまとめて比較する
+
+```bash
+bash scripts/analyze_eval.sh act_pot_multi_v1 act_pot_multi_v1_seen act_pot_multi_v1_n10 act_pot_multi_v1_te --dataset pot_multi_v1
+```
+
+すぐに終わり、評価ごとに次の 2 つの表が出る。最後に、学習データで掴んだ片までの距離の割合が出る。
+
+- 掴む片までの距離（ロボットの根元から）ごとの回数・成功率・失敗の内訳
+- 机の上の片の数ごとの回数・成功率・失敗の内訳
+
+## 結果の記録
+
+結果は [step2_results.md](step2_results.md) にまとめる。
 
 ## 設計メモ
 
