@@ -102,6 +102,7 @@ ACT の改善（掴む片が遠いと掴み損ねる原因の調査）は保留�
 |---|---|
 | `notebooks/00_env_check.ipynb` | GPU・描画バックエンドの確認、ランダム動作の動画、グリッパ開口幅、真上把持の作業領域、小片の把持テスト |
 | `notebooks/view_videos.ipynb` | 生成データ・評価の動画をノートブック上で再生する（1 行目の `FOLDER` を見たいフォルダにして Run All Cells） |
+| `notebooks/watch_training.ipynb` | 裏で動いている学習の進み具合を 1 分ごとに表示し、終わるまで待つ（1 行目の `RUN` を学習の実行名にして Run All Cells） |
 
 ## ディレクトリ構成
 

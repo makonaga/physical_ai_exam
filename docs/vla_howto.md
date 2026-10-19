@@ -123,8 +123,13 @@ bash scripts/train_smolvla.sh pot_multi_v1 smolvla_pot_multi_v1
 - 5,000 ステップごとにモデルが保存される（`outputs/train/smolvla_pot_multi_v1/checkpoints/`）。
 - 進み具合: `tail -n 3 logs/train_smolvla_pot_multi_v1_*.log`。始まって 5 分ほどたったら一度見て、
   `step:...` の行が出ていること（エラーで止まっていないこと）を確認する。
-- 学習中はスペースを Stop しないこと（Stop すると学習も止まる）。
-- 途中で止まったときは、`scripts/train_smolvla.sh` の先頭のコメントにある方法で再開できる。
+- 学習中はスペースを Stop しないこと（Stop すると学習も止まる）。ブラウザは閉じてよい。
+- SageMaker に「操作がないとスペースを自動停止する」設定（アイドルシャットダウン）があると、ブラウザを閉じて
+  しばらくすると学習ごと止まることがある。念のため `notebooks/watch_training.ipynb` を開き、1 行目を
+  `RUN = "smolvla_pot_multi_v1"` にして Run All Cells しておく。学習が終わるまでセルが「実行中」になるので、
+  自動停止の対象になりにくい（ブラウザを閉じてもセルは動き続ける）。進み具合も 1 分ごとに表示される。
+- 途中で止まったときは、`scripts/train_smolvla.sh` の先頭のコメントにある方法で、最後に保存した
+  チェックポイント（5,000 ステップごと）から再開できる。
 
 ## D. 評価と ACT との比較（ml.g5.12xlarge のまま、または ml.c5.9xlarge）
 
