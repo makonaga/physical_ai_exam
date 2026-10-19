@@ -17,18 +17,22 @@
 | 2 | 形・大きさがランダムなにんじんの小片を 5〜20 個散らばせ、ロボットに一番近い片を鍋に入れる | 学習・評価まで完了（初めて見る形で成功率 56%。掴む片が遠いと掴み損ねる）。原因を調査中。手順: [docs/step2_howto.md](docs/step2_howto.md)、結果: [docs/step2_results.md](docs/step2_results.md) |
 | 3 | 複数食材（じゃがいも・大根）と言葉による指示、分布外評価、薄切りの失敗デモ | 未着手 |
 | 4 | 動画・レポート・リポジトリ整理 | 未着手 |
-| ― | ACT を VLA（SmolVLA）に置き換える（段階2のデータで学習し、ACT と比較） | 試運転まで完了。本番の学習待ち。手順: [docs/vla_howto.md](docs/vla_howto.md) |
+| ― | ACT を VLA（SmolVLA）に置き換える（段階2のデータで学習し、ACT と比較） | 学習まで完了（20,000 ステップ、6 時間 54 分）。評価待ち。結果: [docs/vla_results.md](docs/vla_results.md)。手順: [docs/vla_howto.md](docs/vla_howto.md) |
 
-## 次回の作業（VLA の本番の学習と評価）
+## 次回の作業（VLA の評価）
 
-試運転（`ml.g5.xlarge` で 200 ステップの学習と 2 エピソードの評価）は完了。本番の学習は GPU が 4 個ある
-`ml.g5.12xlarge` で行い（2〜2.5 時間）、そのまま評価する（詳しくは [docs/vla_howto.md](docs/vla_howto.md) の C・D）。
+SmolVLA の学習は完了（`outputs/train/smolvla_pot_multi_v1`）。`ml.c5.9xlarge` で評価し、ACT と比べる
+（詳しくは [docs/vla_howto.md](docs/vla_howto.md) の D）。
 
 ```bash
 cd ~/user-default-efs/physical_ai_exam
 git pull
 bash scripts/setup_sagemaker.sh
-bash scripts/train_smolvla.sh pot_multi_v1 smolvla_pot_multi_v1
+bash scripts/evaluate.sh smolvla_pot_multi_v1 100 --task multi
+# ↑ が終わってから
+bash scripts/evaluate.sh smolvla_pot_multi_v1 100 --task multi --piece-set carrot_train --name smolvla_pot_multi_v1_seen
+# ↑ が終わってから
+bash scripts/analyze_eval.sh act_pot_multi_v1 smolvla_pot_multi_v1 act_pot_multi_v1_seen smolvla_pot_multi_v1_seen --dataset pot_multi_v1
 ```
 
 ACT の改善（掴む片が遠いと掴み損ねる原因の調査）は保留中。手順は [docs/step2_results.md](docs/step2_results.md) の 7。
@@ -44,6 +48,7 @@ ACT の改善（掴む片が遠いと掴み損ねる原因の調査）は保留�
 | [docs/step2_howto.md](docs/step2_howto.md) | 段階2: 実行手順と設計メモ（食材片の形・並べ方・開始姿勢・エキスパートの掴み方） |
 | [docs/step2_results.md](docs/step2_results.md) | 段階2: 結果（学習・評価）と考察 |
 | [docs/vla_howto.md](docs/vla_howto.md) | VLA（SmolVLA）: 選んだ理由、学習・評価の手順 |
+| [docs/vla_results.md](docs/vla_results.md) | VLA（SmolVLA）: 結果（学習・評価）と ACT との比較 |
 
 ## セットアップ（SageMaker Studio）
 
