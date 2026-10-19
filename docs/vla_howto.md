@@ -29,7 +29,7 @@ SmolVLA の中身と、学習するところ：
 |---|---|---|---|
 | A | `ml.g5.xlarge` | 準備（追加パッケージのインストール） | 数分 |
 | B | `ml.g5.xlarge` | 試運転（200 ステップの学習と 2 エピソードの評価）で、動くことと速さを確かめる | 20〜30 分 |
-| C | `ml.g5.xlarge` | 本番の学習 | B の結果から決める（数時間の見込み） |
+| C | `ml.g5.xlarge` | 本番の学習（バッチ 64 × 20,000 ステップ） | 約 7 時間 |
 | D | `ml.c5.9xlarge` | 評価（100 エピソード × 2）と ACT との比較 | 1 種類あたり 10 分程度 |
 
 以下のコマンドは、すべて `~/user-default-efs/physical_ai_exam` で実行する。
@@ -82,7 +82,8 @@ grep "step:200" logs/train_smolvla_trial_*.log | tail -n 1
 tail -n 3 logs/eval_smolvla_trial_*.log
 ```
 
-この 2 つの出力を共有する。`updt_s`（1 ステップの時間）から本番の学習ステップ数と時間を決める。
+この 2 つの出力を共有する。`updt_s`（1 ステップの時間）と `mem_gb`（GPU メモリ）から、本番の学習の設定と
+時間を見積もる（実際の試運転: バッチ 32 で 0.63 秒/ステップ、7.7GB）。
 確認できたら、試運転の出力は消してよい。
 
 ```bash
@@ -91,13 +92,14 @@ rm -rf outputs/train/smolvla_trial outputs/eval/smolvla_trial
 
 ## C. 本番の学習（ml.g5.xlarge）
 
-ステップ数は B の結果で決める（既定は 30,000）。
-
 ```bash
-bash scripts/train_smolvla.sh pot_multi_v1 smolvla_pot_multi_v1 --steps=30000
+bash scripts/train_smolvla.sh pot_multi_v1 smolvla_pot_multi_v1 --batch_size=64 --steps=20000 --save_freq=5000
 ```
 
-- 10,000 ステップごとにモデルが保存される（`outputs/train/smolvla_pot_multi_v1/checkpoints/`）。
+- バッチ 64 × 20,000 ステップは、lerobot の SmolVLA の手順と同じ設定（使うサンプル数の合計は ACT の学習と同じ 128 万）。
+- 試運転（バッチ 32）では 1 ステップ 0.63 秒（1 秒あたり 50 サンプル）、GPU メモリ 7.7GB だったので、
+  約 7 時間かかる見込み。
+- 5,000 ステップごとにモデルが保存される（`outputs/train/smolvla_pot_multi_v1/checkpoints/`）。
 - 進み具合: `tail -n 3 logs/train_smolvla_pot_multi_v1_*.log`
 - 学習中はスペースを Stop しないこと（Stop すると学習も止まる）。
 - 途中で止まったときは、`scripts/train_smolvla.sh` の先頭のコメントにある方法で再開できる。

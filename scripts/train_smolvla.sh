@@ -49,7 +49,8 @@ fi
 # - 行動チャンク 50 ステップ（25Hz で 2 秒分）を予測し、50 ステップ実行してから次を予測する
 # - 画像を読む部分と言語モデルは固定し、行動を出す部分（action expert）だけを学習する
 # - 画像は 512×512 に拡大して入力する。指示文（タスクの説明）も入力する
-# バッチ 32 は A10G（24GB）に収まる大きさの目安。試運転のログの mem_gb で確認する
+# - バッチ 64 × 20,000 ステップ（lerobot の SmolVLA の手順と同じ。サンプル数の合計は ACT と同じ 128 万）
+#   試運転（A10G）ではバッチ 32 で 1 ステップ 0.63 秒、GPU メモリ 7.7GB。バッチ 64 で約 7 時間の見込み
 run_in_background "train_${RUN}" \
     "$VENV_DIR/bin/lerobot-train" \
     "${MODEL_ARGS[@]}" \
@@ -58,9 +59,9 @@ run_in_background "train_${RUN}" \
     --policy.device=cuda \
     --policy.push_to_hub=false \
     --wandb.enable=false \
-    --batch_size=32 \
-    --steps=30000 \
-    --save_freq=10000 \
+    --batch_size=64 \
+    --steps=20000 \
+    --save_freq=5000 \
     --log_freq=100 \
     --num_workers=3 \
     --output_dir="outputs/train/$RUN" \
