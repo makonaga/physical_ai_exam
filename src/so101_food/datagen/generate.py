@@ -24,6 +24,10 @@
 一番近い片を鍋に入れる。``--task lang``（段階3）では、にんじん・じゃがいも・大根の片を混ぜて置き、
 指示文で指定した食材の片のうち一番近い片を鍋に入れる（形状セットは ``<食材>_train``）。
 配置はエキスパートが他の片に指を当てずに掴めるものだけを使う。
+
+``--contrast``（``lang`` のみ）では、同じ配置で指示文の食材だけを変えた手本を 3 本ずつ作る
+（どの食材を指示しても配置が同じで、掴む片がすべて違う seed だけを使う）。画像が同じで動きだけが
+違う例を入れて、モデルが指示文を使わないと手本を再現できないようにするため。
 """
 
 from __future__ import annotations
@@ -49,11 +53,25 @@ def _quiet_libraries() -> None:
     datasets.disable_progress_bars()
 
 
+def _same_layout_for_all(env, seed: int, foods: tuple[str, ...]) -> bool:
+    """どの食材を指示しても配置が同じで、掴む片がすべて違うか."""
+    layouts, targets = set(), set()
+    for food in foods:
+        env.forced_food = food
+        try:
+            env.reset(seed=seed)
+        except RuntimeError:  # 指示した食材の片を置ける配置が見つからない
+            return False
+        layouts.add(env.layout_key())
+        targets.add(env.active_slots[0])
+    return len(layouts) == 1 and len(targets) == len(foods)
+
+
 def _generate_shard(job: dict) -> dict:
     import numpy as np
     from lerobot.datasets.lerobot_dataset import LeRobotDataset
 
-    from so101_food.datagen.schema import ROBOT_TYPE, dataset_features, to_dataset_units
+    from so101_food.datagen.schema import ROBOT_TYPE, dataset_features
     from so101_food.env.cameras import CameraRig
     from so101_food.env.factory import make_env
     from so101_food.env.pot_task import CONTROL_HZ
@@ -93,43 +111,35 @@ def _generate_shard(job: dict) -> dict:
     )
     reasons: Counter = Counter()
     episodes = []
-    k = 0
+    k = runs = 0  # k: 試した配置（seed）の数、runs: エキスパートを動かした回数
     while len(episodes) < job["quota"] and k < job["max_attempts"]:
         if spec.task != "cube" and k > 0 and k % job["rebuild_every"] == 0:
             rebuild(k // job["rebuild_every"])
         seed = job["seed_start"] + k * job["seed_stride"]
         k += 1
-        rec = run_expert_episode(env, expert, seed)
-        reasons[rec.reason] += 1
-        if not rec.success:
-            continue
-        states, actions = to_dataset_units(rec.state), to_dataset_units(rec.action)
-        for t in range(rec.n_frames):
-            images = rig.render(rec.qpos[t])
-            frame = {
-                "observation.state": states[t],
-                "action": actions[t],
-                "task": env.task_description,
-            }
-            frame.update({f"observation.images.{key}": img for key, img in images.items()})
-            ds.add_frame(frame)
-        ds.save_episode()
-        episodes.append(
-            {
-                "seed": seed,
-                "object": rec.info["target_object"],
-                "n_pieces": int(rec.info["n_pieces"]),
-                "target_food": rec.info["target_food"],
-                "task": env.task_description,
-                "n_frames": rec.n_frames,
-                "obj_pose0": np.round(rec.obj_pose0, 4).tolist(),
-            }
-        )
-        print(
-            f"[shard {job['shard']:03d}] {len(episodes)}/{job['quota']} "
-            f"(試行 {k}, {time.time() - t0:.0f}s)",
-            flush=True,
-        )
+        foods: tuple[str | None, ...] = (None,)
+        contrast = job.get("contrast", False)
+        if contrast:
+            if not _same_layout_for_all(env, seed, spec.foods):
+                reasons["layout_differs"] += 1
+                continue
+            foods = spec.foods
+        for food in foods:
+            if len(episodes) >= job["quota"]:
+                break
+            env.forced_food = food
+            rec = run_expert_episode(env, expert, seed)
+            runs += 1
+            reasons[rec.reason] += 1
+            if not rec.success:
+                continue
+            _save_episode(ds, rig, env, rec, seed, episodes, contrast)
+            print(
+                f"[shard {job['shard']:03d}] {len(episodes)}/{job['quota']} "
+                f"(試行 {k}, {time.time() - t0:.0f}s)",
+                flush=True,
+            )
+    env.forced_food = None
     ds.finalize()
     rig.close()
     env.close()
@@ -137,11 +147,43 @@ def _generate_shard(job: dict) -> dict:
         "shard": job["shard"],
         "root": job["root"],
         "repo_id": job["repo_id"],
-        "attempts": k,
+        "attempts": runs,
+        "layouts": k,
         "reasons": dict(reasons),
         "episodes": episodes,
         "elapsed_s": round(time.time() - t0, 1),
     }
+
+
+def _save_episode(ds, rig, env, rec, seed: int, episodes: list, contrast: bool) -> None:
+    """成功したエピソードの画像を描画し直してデータセットに保存し、``episodes`` に情報を足す."""
+    import numpy as np
+
+    from so101_food.datagen.schema import to_dataset_units
+
+    states, actions = to_dataset_units(rec.state), to_dataset_units(rec.action)
+    for t in range(rec.n_frames):
+        images = rig.render(rec.qpos[t])
+        frame = {
+            "observation.state": states[t],
+            "action": actions[t],
+            "task": env.task_description,
+        }
+        frame.update({f"observation.images.{key}": img for key, img in images.items()})
+        ds.add_frame(frame)
+    ds.save_episode()
+    episodes.append(
+        {
+            "seed": seed,
+            "object": rec.info["target_object"],
+            "n_pieces": int(rec.info["n_pieces"]),
+            "target_food": rec.info["target_food"],
+            "task": env.task_description,
+            "n_frames": rec.n_frames,
+            "obj_pose0": np.round(rec.obj_pose0, 4).tolist(),
+            "contrast": contrast,
+        }
+    )
 
 
 def main(argv: list[str] | None = None) -> None:
@@ -187,6 +229,11 @@ def main(argv: list[str] | None = None) -> None:
     )
     ap.add_argument("--rebuild-every", type=int, default=10, help="食材片を選び直す試行回数の間隔")
     ap.add_argument(
+        "--contrast",
+        action="store_true",
+        help="lang で、同じ配置・指示文の食材だけ違う手本を 3 本ずつ作る",
+    )
+    ap.add_argument(
         "--min-pieces", type=int, default=None, help="机に置く片の数の下限（既定 multi 5 / lang 7）"
     )
     ap.add_argument(
@@ -196,6 +243,8 @@ def main(argv: list[str] | None = None) -> None:
         help="机に置く片の数の上限（既定 multi 20 / lang 26）",
     )
     args = ap.parse_args(argv)
+    if args.contrast and args.task != "lang":
+        raise SystemExit("--contrast は --task lang のときだけ使えます")
     pool_size = args.pool_size or (24 if args.task in ("multi", "lang") else 20)
     min_pieces, max_pieces = piece_counts(args.task, args.min_pieces, args.max_pieces)
     task = TaskSpec(
@@ -232,6 +281,7 @@ def main(argv: list[str] | None = None) -> None:
             "seed_stride": n_shards,
             "task": task.to_dict(),
             "rebuild_every": args.rebuild_every,
+            "contrast": args.contrast,
             "repo_id": f"local/{args.name}_shard{s:03d}",
             "root": str(work / f"shard{s:03d}"),
         }
@@ -274,6 +324,7 @@ def main(argv: list[str] | None = None) -> None:
         "expert_attempts": attempts,
         "expert_success_rate": round(n_success / max(attempts, 1), 4),
         "expert_outcomes": dict(reasons),
+        "contrast": args.contrast,
         "workers": workers,
         "shards": n_shards,
         "renderer": gl.renderer,

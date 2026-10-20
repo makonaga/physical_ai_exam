@@ -305,6 +305,13 @@ class PotTaskEnv(PickEnv):
         """机の上にある片のスロット番号（先頭が対象の片）."""
         return list(self._active)
 
+    def layout_key(self) -> tuple:
+        """机の上の片と位置（0.1mm 単位）. 指示する食材を変えても配置が同じかを比べるのに使う."""
+        return tuple(
+            (slot, *(round(float(v) * 1e4) for v in self.object_pose(slot)[:3]))
+            for slot in sorted(self._active)
+        )
+
     def robot_qpos(self) -> np.ndarray:
         """6 関節（腕 5 + グリッパ）の現在角度 [rad]."""
         return self.data.qpos[self.robot_qpos_addr].copy()

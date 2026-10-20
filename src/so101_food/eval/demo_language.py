@@ -43,14 +43,6 @@ def _caption(image, lines: list[str]):
     return np.asarray(pil)
 
 
-def _layout(env) -> tuple:
-    """机の上の片と位置（0.1mm 単位）. 指示を変えても配置が同じかを比べるのに使う."""
-    return tuple(
-        (slot, *(round(float(v) * 1e4) for v in env.object_pose(slot)[:3]))
-        for slot in sorted(env.active_slots)
-    )
-
-
 def _find_scene(spec, foods: tuple[str, ...], seeds) -> tuple:
     """指示する食材を変えても配置が同じで、掴む片がすべて違う seed を探す. (環境, seed) を返す."""
     import numpy as np
@@ -65,7 +57,7 @@ def _find_scene(spec, foods: tuple[str, ...], seeds) -> tuple:
         for food in foods:
             env.forced_food = food
             env.reset(seed=seed)
-            layouts.add(_layout(env))
+            layouts.add(env.layout_key())
             targets.add(env.active_slots[0])
         if len(layouts) == 1 and len(targets) == len(foods):
             return env, seed
