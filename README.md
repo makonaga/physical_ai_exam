@@ -15,25 +15,43 @@
 | 0 | 環境構築、グリッパ寸法・作業領域の確認、把持できるかの確認 | 完了。結果: [docs/step0_notes.md](docs/step0_notes.md) |
 | 1 | 立方体 1 個でエキスパート → データ生成 → ACT 学習 → 評価 | 完了（成功率 82%）。手順: [docs/step1_howto.md](docs/step1_howto.md)、結果: [docs/step1_results.md](docs/step1_results.md) |
 | 2 | 形・大きさがランダムなにんじんの小片を 5〜20 個散らばせ、ロボットに一番近い片を鍋に入れる | 学習・評価まで完了（初めて見る形で成功率 56%。掴む片が遠いと掴み損ねる）。原因を調査中。手順: [docs/step2_howto.md](docs/step2_howto.md)、結果: [docs/step2_results.md](docs/step2_results.md) |
-| 3 | にんじん・じゃがいも・大根の片を混ぜて 7〜26 個散らばせ、指示文で指定した食材の一番近い片を鍋に入れる（SmolVLA と、指示文を読まない ACT を比較） | 食材らしい形（じゃがいも = 丸みのある乱切り、大根 = いちょう切り）と食材ごとの重さ、片の数 7〜26 個（段階2の 3 割増し）に変更し、学習データを作り直した（1,500 エピソード）。学習・評価はこれから。手順: [docs/step3_howto.md](docs/step3_howto.md)、結果: [docs/step3_results.md](docs/step3_results.md) |
+| 3 | にんじん・じゃがいも・大根の片を混ぜて 7〜26 個散らばせ、指示文で指定した食材の一番近い片を鍋に入れる（SmolVLA と、指示文を読まない ACT を比較） | 学習・評価まで完了したが、SmolVLA・ACT とも成功率 1〜4%。SmolVLA が指示文を使っていないことを突き止め、対策のデータ（同じ配置で指示文だけを変えた手本など）を作成済み。学習し直しはこれから。手順: [docs/step3_howto.md](docs/step3_howto.md)、結果: [docs/step3_results.md](docs/step3_results.md) |
 | 4 | 動画・レポート・リポジトリ整理 | 未着手 |
 | ― | ACT を VLA（SmolVLA）に置き換える（段階2のデータで学習し、ACT と比較） | 学習・評価まで完了（初めて見る形で成功率 40%。ACT は 56%。推論し直す間隔を短くしても改善せず 28%）。結果: [docs/vla_results.md](docs/vla_results.md)。手順: [docs/vla_howto.md](docs/vla_howto.md) |
 
 ## 次回の作業
 
-段階3の学習・評価（実験 E1〜E6）。手順と順番は [docs/step3_howto.md](docs/step3_howto.md) の「全体の流れ」と B〜D。
-1 日目は `ml.g5.2xlarge` で、E4（画像部分も学習する SmolVLA）の試運転のあと、E2（SmolVLA）を夜通し学習する。
+段階3の学習し直し。原因（SmolVLA が指示文を使わず、候補の真ん中を狙う動きを覚えた）と、
+用意した 3 つのデータの狙いは [docs/step3_results.md](docs/step3_results.md) の 5〜7 章。
 
-```bash
-cd ~/user-default-efs/physical_ai_exam
-git pull
-bash scripts/setup_sagemaker.sh
-TRAIN_VLM=1 bash scripts/train_smolvla.sh pot_lang_v1 smolvla_vlm_trial --steps=200 --save_freq=200 --log_freq=20
-# ↑ が終わってから（20〜30 分）
-bash scripts/train_smolvla.sh pot_lang_v1 smolvla_pot_lang_v1
-```
+1. 学習（GPU）。設定はどれも E2 と同じ（合計バッチ 64 × 20,000 ステップ）。
+   - `ml.p4d.24xlarge`（A100 × 8）なら GPU を分けて同時に（1〜1.5 時間）:
 
-ACT の改善（掴む片が遠いと掴み損ねる原因の調査）は保留中。手順は [docs/step2_results.md](docs/step2_results.md) の 7。
+     ```bash
+     CUDA_VISIBLE_DEVICES=0,1,2,3 bash scripts/train_smolvla.sh pot_lang_contrast smolvla_pot_lang_contrast
+     CUDA_VISIBLE_DEVICES=4,5 bash scripts/train_smolvla.sh pot_lang_v2 smolvla_pot_lang_v2
+     CUDA_VISIBLE_DEVICES=6,7 bash scripts/train_smolvla.sh pot_lang_easy smolvla_pot_lang_easy
+     ```
+
+   - `ml.g5.2xlarge`（A10G × 1）なら 1 本約 7 時間なので、本命の contrast から 1 本ずつ。
+2. 評価（CPU。`ml.c5.9xlarge` か、p4d なら `--workers 30` を付ける）:
+
+   ```bash
+   bash scripts/evaluate.sh smolvla_pot_lang_contrast 100 --task lang
+   bash scripts/evaluate.sh smolvla_pot_lang_v2 100 --task lang
+   bash scripts/evaluate.sh smolvla_pot_lang_easy 100 --task lang --min-pieces 3 --max-pieces 6
+   bash scripts/analyze_eval.sh smolvla_pot_lang_v1 smolvla_pot_lang_contrast smolvla_pot_lang_v2 --dataset pot_lang_v1
+   bash scripts/analyze_landing.sh smolvla_pot_lang_contrast smolvla_pot_lang_v2 smolvla_pot_lang_easy
+   ```
+
+3. 指示文を使うようになったかの調査（GPU があれば速い。なければ `--device cpu`）:
+
+   ```bash
+   bash scripts/probe_language.sh smolvla_pot_lang_contrast pot_lang_v1
+   bash scripts/probe_language.sh smolvla_pot_lang_v2 pot_lang_v1
+   ```
+
+4. 成績のよいモデルでデモ動画: `bash scripts/demo_language.sh <実行名> 3`
 
 ## ドキュメント
 
@@ -97,13 +115,16 @@ ACT の改善（掴む片が遠いと掴み損ねる原因の調査）は保留�
 | スクリプト | 内容 | 向いているインスタンス |
 |---|---|---|
 | `scripts/setup_sagemaker.sh` | 環境構築（スペース起動のたびに実行） | どれでも |
-| `scripts/generate_dataset.sh <名前> <エピソード数> [--task ...]` | エキスパートで学習データを生成（並列） | CPU（vCPU が多いもの） |
+| `scripts/generate_dataset.sh <名前> <エピソード数> [--task ...]` | エキスパートで学習データを生成（並列）。`--contrast` で同じ配置・指示文違いの手本を 3 本ずつ | CPU（vCPU が多いもの） |
 | `scripts/export_dataset_videos.sh <名前> [本数]` | 生成したデータを再生用の動画に書き出す | どれでも |
 | `scripts/train_act.sh <データ名> <実行名> [--steps=...]` | ACT の学習 | GPU |
 | `scripts/train_smolvla.sh <データ名> <実行名> [--steps=...]` | SmolVLA（VLA）の追加学習。先頭に `TRAIN_VLM=1` を付けると画像を読む部分と言語モデルも学習する | GPU |
 | `scripts/evaluate.sh <実行名> <エピソード数> [--task ...]` | 学習済みポリシーの評価（並列）。`--noise`・`--temporal-ensemble` で推論のしかたを変えられる | CPU（vCPU が多いもの） |
 | `scripts/analyze_eval.sh <評価名...> [--dataset <データ名>]` | 評価結果を距離・片の数ごとに比較する | どれでも |
 | `scripts/demo_language.sh <実行名> [配置の数]` | 同じ配置で指示文の食材だけを変えてポリシーを動かすデモ動画を作る（段階3） | CPU |
+| `scripts/probe_language.sh <実行名> <データ名>` | 指示文の食材だけを変えたとき、ポリシーの動きがどれだけ変わるかを調べる | GPU（CPU でも可） |
+| `scripts/analyze_landing.sh <評価名...>` | 評価で手先を下ろした位置が、どの片に一番近かったかを調べる | CPU |
+| `scripts/merge_datasets.sh <名前> <元のデータ名...>` | 生成済みの学習データを 1 つにまとめる | どれでも |
 | `scripts/sync_progress_s3.sh <実行名> <S3 のコピー先>` | 学習の進み具合を 5 分ごとに S3 にコピーする（手元のパソコンから AWS CLI で確認するため） | 学習中のインスタンス |
 
 ## ノートブック
