@@ -25,16 +25,29 @@ VLA（SmolVLA）でなければ解けない。指示文を読まない ACT も�
 
 ## 全体の流れ
 
-| 手順 | インスタンス | 内容 | 所要時間の目安 |
-|---|---|---|---|
-| A | `ml.c5.9xlarge` | 学習データの生成（成功 1,500 エピソード）と動画での確認 | 30〜35 分 |
-| B | `ml.g5.2xlarge` | SmolVLA の学習（20,000 ステップ） | 約 7 時間 |
-| C | `ml.g5.2xlarge`（B のあとそのまま） | ACT の学習（80,000 ステップ）… 比較用 | 約 1 時間 45 分 |
-| D | `ml.c5.9xlarge` | 評価（各 100 エピソード）と比較 | SmolVLA 20 分程度、ACT 5 分程度 |
+レポートに必要な実験（E1〜E6）と、進める順番。インスタンスの切り替えが少なくなる順にしている。
 
-B は時間が長いので、夕方に始めて翌朝に確認するのがよい。C は B が終わってから始める
-（同じ GPU で 2 つ同時に学習すると、どちらも遅くなる）。C を省くと ACT との比較はできないが、
-SmolVLA の評価（D-1）はできる。
+| 実験 | 内容 | レポートで言えること |
+|---|---|---|
+| E1 | 段階2の SmolVLA を、推論のしかた（ノイズ固定・重なった行動の平均）を変えて評価（学習なし） | 行動のばらつきが失敗の原因か |
+| E2 | 段階3の SmolVLA（段階2と同じ設定） | 主な結果（基準） |
+| E3 | 段階3の ACT（指示文を読まない） | 指示文を読めないと「別の食材」の失敗がどれだけ出るか |
+| E4 | 段階3の SmolVLA（画像を読む部分と言語モデルも学習） | 画像部分の固定が精度を下げていたか |
+| E5 | E2〜E4 の評価（各 100 回、同じ配置）と比較 | 食材ごとの成功率・失敗の内訳・着地のずれ |
+| E6 | 同じ配置で指示文だけを 3 通りに変えるデモ動画 | 指示文で動きが変わること（YouTube 用） |
+
+| 日 | 手順 | インスタンス | 内容 | 所要時間の目安 |
+|---|---|---|---|---|
+| ― | A | `ml.c5.9xlarge` | 学習データの生成と動画での確認（**完了**） | 30〜35 分 |
+| 1 日目 | B-1 | `ml.g5.2xlarge` | E4 の試運転（200 ステップ） | 20〜30 分 |
+| 1 日目 | B-2 | `ml.g5.2xlarge` | E2: SmolVLA の学習（夜通し） | 約 7 時間 |
+| 2 日目 | C-1 | `ml.g5.2xlarge` | E3: ACT の学習 | 約 1 時間 45 分 |
+| 2 日目 | C-2 | `ml.g5.2xlarge` | E4: SmolVLA（画像部分も学習）の学習（夜通し） | 10〜15 時間（試運転で見積もる） |
+| 3 日目 | D-1 | `ml.c5.9xlarge` | E1: 段階2の SmolVLA で推論のしかたを比べる | 各 20〜40 分 |
+| 3 日目 | D-2 | `ml.c5.9xlarge` | E5: 段階3の評価と比較 | 各 20 分程度（ACT は 5 分程度） |
+| 3 日目 | D-3 | `ml.c5.9xlarge` | E6: デモ動画 | 10〜20 分 |
+
+GPU で 2 つの学習を同時に動かすと、どちらも遅くなるので、学習は 1 つずつ行う。
 
 インスタンスの切り替え方は [段階1](step1_howto.md) と同じ（スペースを Stop → Instance を変更 → Run space →
 Open JupyterLab）。起動したら毎回、ターミナル（File → New → Terminal）で次の 3 行を実行する。
@@ -111,10 +124,37 @@ Run → Run All Cells で再生する。ファイル名は `ep000_13pieces_potat
 俯瞰カメラでは画面の左上にロボットの根元がある。ファイル名の食材の片のうち、**左上に一番近い片** を掴んで
 鍋に入れていれば正しい（他の食材の片の方が近くにあっても、それは掴まない）。
 
-## B. SmolVLA の学習（ml.g5.2xlarge）
+## B. 1 日目（ml.g5.2xlarge）
 
 インスタンスを `ml.g5.2xlarge` に切り替え、最初の 3 行を実行する。
 `setup_sagemaker.sh` の最後に `CUDA 利用可能: True（NVIDIA A10G）` と出れば GPU が使える。
+
+### B-1. E4 の試運転（画像部分も学習する設定、200 ステップ、20〜30 分）
+
+E4 は学習するパラメータが約 1 億 → 約 3.7 億に増えるので、GPU メモリに収まるかと、1 ステップの時間を
+先に確かめる（いきなり十数時間の学習を始めて途中で止まると損が大きい）。
+
+```bash
+TRAIN_VLM=1 bash scripts/train_smolvla.sh pot_lang_v1 smolvla_vlm_trial --steps=200 --save_freq=200 --log_freq=20
+```
+
+- 最初に `画像を読む部分と言語モデルも学習します（学習率 5e-5）。` と
+  `GPU 1 個で学習します（1 GPU あたりのバッチ 32、合計 32、40000 ステップ）。` が出る
+  （ステップ数の表示は既定値。試運転では `--steps=200` が優先される）。
+- 20〜30 分後に、次の出力を共有する。
+
+  ```bash
+  tail -n 5 logs/train_smolvla_vlm_trial_*.log
+  ```
+
+  `step:200 ... updt_s:... mem_gb:...` の行があれば成功（`updt_s` が 1 ステップの時間、`mem_gb` が
+  GPU メモリ）。これから E4 の本番のステップ数と時間を決める。
+- `CUDA out of memory` で止まったときは、合計バッチを 16 にして試運転をやり直す
+  （`outputs/train/smolvla_vlm_trial` を消してから、先頭に `TOTAL_BATCH=16 ` を付けて同じコマンド）。
+
+### B-2. E2: SmolVLA の学習（段階2と同じ設定、約 7 時間）
+
+試運転が終わってから始める。
 
 ```bash
 bash scripts/train_smolvla.sh pot_lang_v1 smolvla_pot_lang_v1
@@ -123,62 +163,101 @@ bash scripts/train_smolvla.sh pot_lang_v1 smolvla_pot_lang_v1
 - 設定は段階2の `smolvla_pot_multi_v1` と同じ（合計バッチ 64 × 20,000 ステップ、5,000 ステップごとに保存）。
   段階2では 6 時間 54 分かかった。
 - 指示文はデータの各フレームに記録されていて、学習スクリプトがそのまま SmolVLA に渡す（設定の追加は不要）。
-- 5 分ほどたったら進み具合を確認する。
-
-  ```bash
-  tail -n 3 logs/train_smolvla_pot_lang_v1_*.log
-  ```
-
+- 5 分ほどたったら `tail -n 3 logs/train_smolvla_pot_lang_v1_*.log` で進み具合を確認する。
   `step:...  loss:...` の行が出ていれば正常。
 - 学習中はスペースを Stop しないこと（ブラウザは閉じてよい）。アイドルシャットダウンが心配なときは、
   `notebooks/watch_training.ipynb` の 1 行目を `RUN = "smolvla_pot_lang_v1"` にして Run All Cells しておく。
 - 手元のパソコンから進み具合を見たいときは、学習を始めたあと
   `bash scripts/sync_progress_s3.sh smolvla_pot_lang_v1 s3://<バケット名>/<フォルダ>` を実行しておく
   （見方は [vla_howto.md](vla_howto.md) の C と同じ）。
-- 終わったかの確認：
+- 終わったかの確認：`ls outputs/train/smolvla_pot_lang_v1/checkpoints/` に `020000` と `last` があれば完了。
 
-  ```bash
-  ls outputs/train/smolvla_pot_lang_v1/checkpoints/
-  ```
+## C. 2 日目（ml.g5.2xlarge のまま）
 
-  `020000` と `last` があれば完了。
-
-## C. ACT の学習（ml.g5.2xlarge のまま。比較用）
-
-B が終わってから実行する。
+### C-1. E3: ACT の学習（比較用、約 1 時間 45 分）
 
 ```bash
 bash scripts/train_act.sh pot_lang_v1 act_pot_lang_v1 --steps=80000
 ```
 
-- 設定は段階2の `act_pot_multi_v1` と同じ。約 1 時間 45 分。
+- 設定は段階2の `act_pot_multi_v1` と同じ。
 - ACT は指示文を入力に使わない（LeRobot の ACT は画像と関節角度だけを読む）。そのため、画像だけから
   「どの食材を掴むか」を決めることになり、指示文と違う食材を掴む失敗（`wrong_food`）が多くなるはず。
   これを SmolVLA と比べることで、「指示文を読めること」の効果を見る。
 - 終わったかの確認：`ls outputs/train/act_pot_lang_v1/checkpoints/` に `080000` と `last` があれば完了。
 
-## D. 評価（ml.c5.9xlarge）
+### C-2. E4: SmolVLA（画像を読む部分と言語モデルも学習、10〜15 時間）
+
+C-1 が終わってから始める。ステップ数は B-1 の試運転の結果から決める（下は既定値のまま始める例）。
+
+```bash
+TRAIN_VLM=1 bash scripts/train_smolvla.sh pot_lang_v1 smolvla_pot_lang_v1_vlm
+```
+
+- 既定は合計バッチ 32 × 40,000 ステップ（使うサンプル数の合計は E2 と同じ 128 万）、学習率 5e-5。
+  E2 との違いは「画像を読む部分（SigLIP）と言語モデルも学習する」こと。バッチと学習率は、GPU メモリと
+  事前学習の知識を壊さないために下げている。
+- 時間がかかりすぎる場合は、末尾に `--steps=30000` のようにステップ数を付けて減らす（試運転の `updt_s` ×
+  ステップ数 ≒ 学習時間）。
+- 途中で止まって再開するときも、先頭に `TRAIN_VLM=1 ` を付ける（付けないとバッチ・ステップ数が変わる）。
+- 終わったかの確認：`ls outputs/train/smolvla_pot_lang_v1_vlm/checkpoints/` に最後のステップ数と `last` があれば完了。
+
+## D. 3 日目：評価（ml.c5.9xlarge）
 
 インスタンスを `ml.c5.9xlarge` に切り替え、最初の 3 行を実行してから、次を 1 つずつ実行する
 （前のログに `完了` が出てから次へ）。
 
+### D-1. E1: 段階2の SmolVLA で推論のしかたを比べる（学習なし）
+
 ```bash
-# 1. SmolVLA、初めて見る形（評価用の形状セット）… 本命
-bash scripts/evaluate.sh smolvla_pot_lang_v1 100 --task lang
+# 行動を作るときの初期ノイズを毎回 0 にする（毎回新しい乱数 → 推論のたびに経路が変わる、をなくす）
+bash scripts/evaluate.sh smolvla_pot_multi_v1 100 --task multi --noise zero --name smolvla_pot_multi_v1_zero
 
-# 2. ACT、同じ 100 の配置（C を省いた場合は不要）
-bash scripts/evaluate.sh act_pot_lang_v1 100 --task lang
+# 10 ステップごとに推論し、重なった行動チャンク（最大 5 個）を平均する（ACT の時間的アンサンブルと同じ考え方）
+bash scripts/evaluate.sh smolvla_pot_multi_v1 100 --task multi --temporal-ensemble 0.01 --name smolvla_pot_multi_v1_te
 
-# 3. 結果を並べて比較する（C を省いた場合は act_pot_lang_v1 を消す）
-bash scripts/analyze_eval.sh smolvla_pot_lang_v1 act_pot_lang_v1 --dataset pot_lang_v1
+# 既定（40%）・10 ステップごと（28%）と並べて比べる
+bash scripts/analyze_eval.sh smolvla_pot_multi_v1 smolvla_pot_multi_v1_n10 smolvla_pot_multi_v1_zero smolvla_pot_multi_v1_te
 ```
 
-- `--task lang` だけで、評価用の形状セット（にんじん・じゃがいも・大根の `*_test`）を使う。
-  学習で見た形で評価したいときは `--piece-set train --name smolvla_pot_lang_v1_seen` を付ける。
-- 評価は同じ seed から始めるので、SmolVLA と ACT の配置（片の数・形・位置・指示文）はまったく同じになる。
+効果があった設定は、D-2 の SmolVLA の評価にも付けて試す（例: `--noise zero --name smolvla_pot_lang_v1_zero`）。
+
+### D-2. E5: 段階3の評価と比較
+
+```bash
+# 1. E2: SmolVLA（基準）
+bash scripts/evaluate.sh smolvla_pot_lang_v1 100 --task lang
+
+# 2. E3: ACT（同じ 100 の配置）
+bash scripts/evaluate.sh act_pot_lang_v1 100 --task lang
+
+# 3. E4: SmolVLA（画像部分も学習）
+bash scripts/evaluate.sh smolvla_pot_lang_v1_vlm 100 --task lang
+
+# 4. 並べて比べる
+bash scripts/analyze_eval.sh smolvla_pot_lang_v1 smolvla_pot_lang_v1_vlm act_pot_lang_v1 --dataset pot_lang_v1
+```
+
+- `--task lang` だけで、評価用の形状セット（にんじん・じゃがいも・大根の `*_test`）と、片 7〜26 個の配置を使う。
+  学習で見た形で評価したいときは `--piece-set train --name <名前>_seen` を付ける。
+- 評価は同じ seed から始めるので、3 つの配置（片の数・形・位置・指示文）はまったく同じになる。
 - 動画は `outputs/eval/<名前>/videos/`（`view_videos.ipynb` の `FOLDER` を変えて再生）。
 
-3 の出力には、評価ごとに次の表が出る。
+### D-3. E6: デモ動画（同じ配置で指示文だけを変える）
+
+```bash
+bash scripts/demo_language.sh smolvla_pot_lang_v1 3
+# ↑ が終わってから（比較用。ACT は指示文を読まないので、指示が変わっても同じ片を掴むはず）
+bash scripts/demo_language.sh act_pot_lang_v1 3
+```
+
+- にんじん・じゃがいも・大根のどれを指示しても机の上が同じで、掴むべき片が指示ごとに違う配置を 3 つ探し、
+  指示文を 3 通りに変えて動かす。1 配置ごとに 1 本の動画（指示文 3 通りを続けて再生。左上に指示文と結果）。
+- 出力: `outputs/demo/<実行名>/scene0_seed300000.mp4` など 3 本と `summary.json`。
+  `view_videos.ipynb` の `FOLDER` を `outputs/demo/smolvla_pot_lang_v1` にして再生する。
+- E4 の方が成績がよければ、`smolvla_pot_lang_v1_vlm` でも作る。
+
+D-2 の 4 の出力には、評価ごとに次の表が出る。
 
 - 掴む片までの距離ごと・机の上の片の数ごとの、回数・成功率・失敗の内訳
 - **指定した食材ごと** の、回数・成功率・失敗の内訳
@@ -194,7 +273,8 @@ bash scripts/analyze_eval.sh smolvla_pot_lang_v1 act_pot_lang_v1 --dataset pot_l
 | `not_grasped` | 掴めず | 対象の片を持ち上げられなかった |
 | `missed_pot` | 鍋外 | 対象の片を持ち上げたが鍋に入らなかった |
 
-最後の 3 の出力をそのまま共有してもらえれば、結果と考察を `docs/step3_results.md` にまとめる。
+D-1・D-2 の analyze の出力と、D-3 の最後の行（`scene 0（seed ...）: carrot success, ...`）を共有してもらえれば、
+結果と考察を `docs/step3_results.md` にまとめる。
 
 ## 設計メモ
 

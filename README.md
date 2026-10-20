@@ -21,13 +21,15 @@
 
 ## 次回の作業
 
-段階3の学習（SmolVLA → ACT）と評価。手順は [docs/step3_howto.md](docs/step3_howto.md) の B〜D。
-まず `ml.g5.2xlarge` で SmolVLA を学習する（約 7 時間）。
+段階3の学習・評価（実験 E1〜E6）。手順と順番は [docs/step3_howto.md](docs/step3_howto.md) の「全体の流れ」と B〜D。
+1 日目は `ml.g5.2xlarge` で、E4（画像部分も学習する SmolVLA）の試運転のあと、E2（SmolVLA）を夜通し学習する。
 
 ```bash
 cd ~/user-default-efs/physical_ai_exam
 git pull
 bash scripts/setup_sagemaker.sh
+TRAIN_VLM=1 bash scripts/train_smolvla.sh pot_lang_v1 smolvla_vlm_trial --steps=200 --save_freq=200 --log_freq=20
+# ↑ が終わってから（20〜30 分）
 bash scripts/train_smolvla.sh pot_lang_v1 smolvla_pot_lang_v1
 ```
 
@@ -98,9 +100,10 @@ ACT の改善（掴む片が遠いと掴み損ねる原因の調査）は保留�
 | `scripts/generate_dataset.sh <名前> <エピソード数> [--task ...]` | エキスパートで学習データを生成（並列） | CPU（vCPU が多いもの） |
 | `scripts/export_dataset_videos.sh <名前> [本数]` | 生成したデータを再生用の動画に書き出す | どれでも |
 | `scripts/train_act.sh <データ名> <実行名> [--steps=...]` | ACT の学習 | GPU |
-| `scripts/train_smolvla.sh <データ名> <実行名> [--steps=...]` | SmolVLA（VLA）の追加学習 | GPU |
-| `scripts/evaluate.sh <実行名> <エピソード数> [--task ...]` | 学習済みポリシーの評価（並列） | CPU（vCPU が多いもの） |
+| `scripts/train_smolvla.sh <データ名> <実行名> [--steps=...]` | SmolVLA（VLA）の追加学習。先頭に `TRAIN_VLM=1` を付けると画像を読む部分と言語モデルも学習する | GPU |
+| `scripts/evaluate.sh <実行名> <エピソード数> [--task ...]` | 学習済みポリシーの評価（並列）。`--noise`・`--temporal-ensemble` で推論のしかたを変えられる | CPU（vCPU が多いもの） |
 | `scripts/analyze_eval.sh <評価名...> [--dataset <データ名>]` | 評価結果を距離・片の数ごとに比較する | どれでも |
+| `scripts/demo_language.sh <実行名> [配置の数]` | 同じ配置で指示文の食材だけを変えてポリシーを動かすデモ動画を作る（段階3） | CPU |
 | `scripts/sync_progress_s3.sh <実行名> <S3 のコピー先>` | 学習の進み具合を 5 分ごとに S3 にコピーする（手元のパソコンから AWS CLI で確認するため） | 学習中のインスタンス |
 
 ## ノートブック
@@ -135,7 +138,7 @@ ACT の改善（掴む片が遠いと掴み損ねる原因の調査）は保留�
 | フォルダ | 中身 |
 |---|---|
 | `data/` | 生成した学習データ（LeRobot v3 形式。例: `data/pot_multi_v1/`） |
-| `outputs/` | 学習済みモデル（`outputs/train/`）、評価結果（`outputs/eval/`）、データの動画（`outputs/dataset_videos/`） |
+| `outputs/` | 学習済みモデル（`outputs/train/`）、評価結果（`outputs/eval/`）、データの動画（`outputs/dataset_videos/`）、デモ動画（`outputs/demo/`） |
 | `logs/` | スクリプトのログ |
 
 ## テスト

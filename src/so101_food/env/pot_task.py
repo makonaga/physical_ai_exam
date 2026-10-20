@@ -227,6 +227,8 @@ class PotTaskEnv(PickEnv):
         self.overhead = overhead if overhead is not None else OverheadCameraSpec()
         self.clutter = clutter
         self.scene_check: Callable[[PotTaskEnv], bool] | None = None
+        # 指示する食材を決めておく（デモ用。None なら机の上の食材からランダムに選ぶ）
+        self.forced_food: str | None = None
         self._init_common(
             config=config,
             render_mode=render_mode,
@@ -397,6 +399,11 @@ class PotTaskEnv(PickEnv):
             # 机の上にある食材から 1 つ選び、その食材の片だけで一番近い片を決める
             foods = sorted({self._slot_food(q[0]) for q in placed})
             food = foods[int(rng.integers(len(foods)))]
+            if self.forced_food is not None:
+                # 乱数の使い方は変えずに食材だけ差し替える（同じ seed なら配置が同じになりやすい）
+                if self.forced_food not in foods:
+                    return None
+                food = self.forced_food
             candidates = [i for i in order if self._slot_food(placed[i][0]) == food]
         if dist[candidates[0]] > c.max_target_dist:
             return None

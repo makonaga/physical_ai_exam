@@ -20,6 +20,11 @@
 複数片のときの配置は、学習データと同じく「エキスパートなら他の片に指を当てずに掴める」
 ものだけを使う（エキスパートは配置の確認にだけ使い、ロボットは動かさない）。
 
+推論のしかた（``--n-action-steps``・``--temporal-ensemble``・``--noise``）は
+``so101_food.eval.inference`` を参照。VLA の ``--temporal-ensemble`` は
+``--n-action-steps``（既定 10）ステップごとに推論し、重なった予測を平均する
+（ACT は LeRobot の実装で毎ステップ推論する）。
+
 ``episodes.csv`` には、手先（TCP）が一番低くなった位置（＝掴もうとした位置）と、掴む片の初期位置との
 ずれも記録する（``land_err_mm``: 水平距離、``land_radial_mm``: ロボットの根元から片へ向かう方向の
 ずれで、正なら片より遠く・負なら手前、``land_tangent_mm``: それと直交する方向のずれ）。
@@ -39,6 +44,8 @@ from collections import Counter
 from dataclasses import replace
 from pathlib import Path
 
+from so101_food.eval.inference import NOISE_MODES
+
 REPO = Path(__file__).resolve().parents[3]
 VLA_TYPES = ("smolvla", "pi0", "pi05", "pi0_fast", "groot", "xvla")
 
@@ -53,10 +60,10 @@ def _load_policy(path: str, n_action_steps: int | None, temporal_ensemble: float
         # VLA（SmolVLA）: 土台の VLM の重みも学習済みモデルに含まれているので、別に読み込まない
         # （読み込むと bfloat16 になり、CPU では遅い。ここでは全体を float32 で動かす）
         cfg.load_vlm_weights = False
-    if temporal_ensemble is not None:
-        cfg.temporal_ensemble_coeff = temporal_ensemble
+    if temporal_ensemble is not None and cfg.type not in VLA_TYPES:
+        cfg.temporal_ensemble_coeff = temporal_ensemble  # ACT: LeRobot の実装（毎ステップ推論）
         cfg.n_action_steps = 1
-    elif n_action_steps is not None:
+    elif n_action_steps is not None and temporal_ensemble is None:
         cfg.n_action_steps = n_action_steps
     policy = get_policy_class(cfg.type).from_pretrained(path, config=cfg)
     policy.eval()
@@ -66,20 +73,106 @@ def _load_policy(path: str, n_action_steps: int | None, temporal_ensemble: float
     return policy, pre, post
 
 
+def make_selector(job: dict):
+    """``job`` の設定（ポリシーのパス・推論のしかた）で、行動を出す ActionSelector を作る."""
+    from so101_food.eval.inference import ActionSelector
+
+    policy, pre, post = _load_policy(job["policy"], job["n_action_steps"], job["temporal_ensemble"])
+    is_vla = policy.config.type in VLA_TYPES
+    return ActionSelector(
+        policy,
+        pre,
+        post,
+        noise=job["noise"],
+        ensemble=job["temporal_ensemble"] if is_vla else None,
+        replan=job["n_action_steps"] or 10,
+    )
+
+
+def run_policy_episode(
+    env, rig, select, seed: int, max_steps: int, settle_steps: int, record: bool
+) -> tuple[dict, list]:
+    """配置 ``seed`` でポリシーを 1 エピソード動かし、結果と（``record`` なら）動画のフレームを返す.
+
+    ``env.reset`` も行う（``env`` の設定はそのまま使う）。
+    """
+    import numpy as np
+    import torch
+
+    from so101_food.datagen.schema import from_dataset_units, to_dataset_units
+    from so101_food.env.pot_task import FRAME_SKIP, failure_reason
+
+    low, high = env.action_space.low, env.action_space.high
+    t0 = time.time()
+    env.reset(seed=seed)
+    select.reset()
+    obj_pose0 = env.object_pose()
+    frames, info, success_since = [], {}, None
+    land_z, land_xy = np.inf, obj_pose0[:2].copy()  # 手先が一番低くなった高さと位置
+    step = 0
+    for step in range(1, max_steps + 1):
+        images = rig.render(env.data.qpos)
+        if record:
+            frames.append(np.concatenate([images["overhead"], images["wrist"]], axis=1))
+        obs = {
+            "observation.state": torch.from_numpy(to_dataset_units(env.robot_qpos()))[None],
+            "task": [env.task_description],
+        }
+        for key, img in images.items():
+            obs[f"observation.images.{key}"] = (
+                torch.from_numpy(img).permute(2, 0, 1).float().div(255.0)[None]
+            )
+        action = select(obs)
+        target = np.clip(from_dataset_units(action.squeeze(0).cpu().numpy()), low, high)
+        for _ in range(FRAME_SKIP):
+            _, _, _, _, info = env.step(target)
+        tcp = env._get_tcp_pose()[:3]
+        if tcp[2] < land_z:
+            land_z, land_xy = float(tcp[2]), tcp[:2].copy()
+        # 鍋に入ってから一定時間たったら打ち切る（そのまま入っていれば成功のまま）
+        if info["success"]:
+            success_since = step if success_since is None else success_since
+            if step - success_since >= settle_steps:
+                break
+        else:
+            success_since = None
+    reason = failure_reason(info)
+    # 掴もうとした位置のずれを、根元 → 片の向き（半径方向）とそれに直交する向きに分ける
+    radial_dir = obj_pose0[:2] / np.linalg.norm(obj_pose0[:2])
+    offset = (land_xy - obj_pose0[:2]) * 1e3
+    result = {
+        "seed": seed,
+        "object": info["target_object"],
+        "n_pieces": int(info["n_pieces"]),
+        "target_food": info["target_food"],
+        "success": reason == "success",
+        "reason": reason,
+        "steps": step,
+        "max_lift_m": round(float(info["max_lift"]), 3),
+        "ever_grasped": bool(info["ever_grasped"]),
+        "obj_x": round(float(obj_pose0[0]), 4),
+        "obj_y": round(float(obj_pose0[1]), 4),
+        "land_z_mm": round(land_z * 1e3, 1),
+        "land_err_mm": round(float(np.linalg.norm(offset)), 1),
+        "land_radial_mm": round(float(offset @ radial_dir), 1),
+        "land_tangent_mm": round(float(offset @ [-radial_dir[1], radial_dir[0]]), 1),
+        "time_s": round(time.time() - t0, 1),
+    }
+    return result, frames
+
+
 def _evaluate_chunk(job: dict) -> list[dict]:
     import numpy as np
     import torch
 
     torch.set_num_threads(job["torch_threads"])
-    from so101_food.datagen.schema import from_dataset_units, to_dataset_units
     from so101_food.env.cameras import CameraRig
     from so101_food.env.factory import make_env
-    from so101_food.env.pot_task import FRAME_SKIP, failure_reason
     from so101_food.env.spec import TaskSpec
     from so101_food.expert.pot_expert import PotExpert
     from so101_food.utils.render import save_mp4
 
-    policy, pre, post = _load_policy(job["policy"], job["n_action_steps"], job["temporal_ensemble"])
+    select = make_selector(job)
     spec = TaskSpec(**job["task"])
     env = rig = None
     results = []
@@ -95,69 +188,16 @@ def _evaluate_chunk(job: dict) -> list[dict]:
             env = make_env(replace(spec, pool_size=1), np.random.default_rng([job["seed"], index]))
             env.scene_check = PotExpert(env).can_grasp
             rig = CameraRig(env.model)
-            low, high = env.action_space.low, env.action_space.high
-        t0 = time.time()
-        env.reset(seed=seed)
-        policy.reset()
-        obj_pose0 = env.object_pose()
         record = index < job["videos"]
-        frames, info, success_since = [], {}, None
-        land_z, land_xy = np.inf, obj_pose0[:2].copy()  # 手先が一番低くなった高さと位置
-        step = 0
-        for step in range(1, job["max_steps"] + 1):
-            images = rig.render(env.data.qpos)
-            if record:
-                frames.append(np.concatenate([images["overhead"], images["wrist"]], axis=1))
-            obs = {
-                "observation.state": torch.from_numpy(to_dataset_units(env.robot_qpos()))[None],
-                "task": [env.task_description],
-            }
-            for key, img in images.items():
-                obs[f"observation.images.{key}"] = (
-                    torch.from_numpy(img).permute(2, 0, 1).float().div(255.0)[None]
-                )
-            with torch.inference_mode():
-                action = post(policy.select_action(pre(obs)))
-            target = np.clip(from_dataset_units(action.squeeze(0).cpu().numpy()), low, high)
-            for _ in range(FRAME_SKIP):
-                _, _, _, _, info = env.step(target)
-            tcp = env._get_tcp_pose()[:3]
-            if tcp[2] < land_z:
-                land_z, land_xy = float(tcp[2]), tcp[:2].copy()
-            # 鍋に入ってから一定時間たったら打ち切る（そのまま入っていれば成功のまま）
-            if info["success"]:
-                success_since = step if success_since is None else success_since
-                if step - success_since >= job["settle_steps"]:
-                    break
-            else:
-                success_since = None
-        reason = failure_reason(info)
-        # 掴もうとした位置のずれを、根元 → 片の向き（半径方向）とそれに直交する向きに分ける
-        radial_dir = obj_pose0[:2] / np.linalg.norm(obj_pose0[:2])
-        offset = (land_xy - obj_pose0[:2]) * 1e3
-        result = {
-            "episode": index,
-            "seed": seed,
-            "object": info["target_object"],
-            "n_pieces": int(info["n_pieces"]),
-            "target_food": info["target_food"],
-            "success": reason == "success",
-            "reason": reason,
-            "steps": step,
-            "max_lift_m": round(float(info["max_lift"]), 3),
-            "ever_grasped": bool(info["ever_grasped"]),
-            "obj_x": round(float(obj_pose0[0]), 4),
-            "obj_y": round(float(obj_pose0[1]), 4),
-            "land_z_mm": round(land_z * 1e3, 1),
-            "land_err_mm": round(float(np.linalg.norm(offset)), 1),
-            "land_radial_mm": round(float(offset @ radial_dir), 1),
-            "land_tangent_mm": round(float(offset @ [-radial_dir[1], radial_dir[0]]), 1),
-            "time_s": round(time.time() - t0, 1),
-        }
+        result, frames = run_policy_episode(
+            env, rig, select, seed, job["max_steps"], job["settle_steps"], record
+        )
+        result = {"episode": index, **result}
         if record:
-            name = f"ep{index:03d}_seed{seed}_{reason}.mp4"
+            name = f"ep{index:03d}_seed{seed}_{result['reason']}.mp4"
             save_mp4(frames, Path(job["out"]) / "videos" / name, fps=25)
-        print(f"[eval] ep{index:03d} seed={seed} {reason} ({result['time_s']}s)", flush=True)
+        reason, sec = result["reason"], result["time_s"]
+        print(f"[eval] ep{index:03d} seed={seed} {reason} ({sec}s)", flush=True)
         results.append(result)
     rig.close()
     env.close()
@@ -237,7 +277,17 @@ def main(argv: list[str] | None = None) -> None:
     )
     ap.add_argument("--n-action-steps", type=int, default=None, help="行動チャンクのうち実行する数")
     ap.add_argument(
-        "--temporal-ensemble", type=float, default=None, help="ACT の時間的アンサンブル係数"
+        "--temporal-ensemble",
+        type=float,
+        default=None,
+        help="重なった行動チャンクを平均する係数（例 0.01）。VLA は --n-action-steps ごとに推論",
+    )
+    ap.add_argument(
+        "--noise",
+        choices=NOISE_MODES,
+        default="random",
+        help="VLA が行動を作るときの初期ノイズ（random: 毎回新しい乱数 / zero: 0 / "
+        "fixed: 毎回同じ乱数）",
     )
     ap.add_argument(
         "--torch-threads",
@@ -267,6 +317,8 @@ def main(argv: list[str] | None = None) -> None:
     from lerobot.configs.policies import PreTrainedConfig
 
     is_vla = PreTrainedConfig.from_pretrained(policy).type in VLA_TYPES
+    if args.noise != "random" and not is_vla:
+        raise SystemExit("--noise は VLA（flow matching で行動を作るモデル）だけで使えます")
     if args.workers is None:
         args.workers = min(default_workers(), 12) if is_vla else default_workers()
     if args.torch_threads is None:
@@ -285,6 +337,7 @@ def main(argv: list[str] | None = None) -> None:
             "seed": args.seed,
             "n_action_steps": args.n_action_steps,
             "temporal_ensemble": args.temporal_ensemble,
+            "noise": args.noise,
             "torch_threads": args.torch_threads,
         }
         for w in range(workers)
@@ -314,7 +367,7 @@ def main(argv: list[str] | None = None) -> None:
         "task": task.to_dict(),
         "settings": {
             k: getattr(args, k)
-            for k in ("seed", "max_steps", "n_action_steps", "temporal_ensemble")
+            for k in ("seed", "max_steps", "n_action_steps", "temporal_ensemble", "noise")
         },
         "elapsed_s": round(time.time() - t0, 1),
     }

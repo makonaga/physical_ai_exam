@@ -16,9 +16,17 @@
 # ステップ数は 1 GPU のときと同じにするので、同じ学習をより短い時間で行える。
 #
 # 出力: outputs/train/<実行名>/checkpoints/<ステップ数>/pretrained_model/（last は最新へのリンク）
+# 画像を読む部分と言語モデルも学習する設定（段階3の E4。既定は行動を出す部分だけを学習）:
+#   TRAIN_VLM=1 bash scripts/train_smolvla.sh pot_lang_v1 smolvla_pot_lang_v1_vlm
+#   TRAIN_VLM=1 bash scripts/train_smolvla.sh pot_lang_v1 smolvla_vlm_trial --steps=200 --save_freq=200 --log_freq=20
+#   学習する量が約 1 億 → 約 3.7 億パラメータに増えて GPU メモリが足りなくなりやすいので、合計バッチを 32 に
+#   減らし（ステップ数を 2 倍にして、使うサンプル数の合計は同じ 128 万にする）、学習率を 5e-5 に下げる
+#   （画像・言語モデルの事前学習の知識を壊しにくくするため）。合計バッチは TOTAL_BATCH=16 などで変えられる。
+#
 # 途中で止まった場合の再開:
 #   bash scripts/train_smolvla.sh <データセット名> <実行名> --resume=true \
 #       --config_path=outputs/train/<実行名>/checkpoints/last/pretrained_model/train_config.json
+#   （TRAIN_VLM=1 で始めた学習は、再開するときも先頭に TRAIN_VLM=1 を付ける）
 set -euo pipefail
 source "$(dirname "${BASH_SOURCE[0]}")/_common.sh"
 
@@ -42,9 +50,21 @@ if [ -e "outputs/train/$RUN" ] && [ "$RESUMING" = "0" ]; then
     exit 1
 fi
 
+TRAIN_VLM="${TRAIN_VLM:-0}"
+if [ "$TRAIN_VLM" = "1" ]; then
+    TOTAL_BATCH="${TOTAL_BATCH:-32}"
+    VLM_ARGS=(--policy.train_expert_only=false --policy.freeze_vision_encoder=false
+              --policy.optimizer_lr=5e-5)
+    echo "画像を読む部分と言語モデルも学習します（学習率 5e-5）。"
+else
+    TOTAL_BATCH="${TOTAL_BATCH:-64}"
+    VLM_ARGS=()
+fi
+STEPS=$(( 1280000 / TOTAL_BATCH ))  # 使うサンプル数の合計を 128 万にそろえる（バッチ 64 なら 20,000）
+
 # GPU の数に合わせて、起動のしかた・1 GPU あたりのバッチ・データ読み込みの並列数を決める
 NGPU="$("$PY" -c "import torch; print(torch.cuda.device_count())")"
-BATCH=$(( 64 / NGPU > 0 ? 64 / NGPU : 1 ))
+BATCH=$(( TOTAL_BATCH / NGPU > 0 ? TOTAL_BATCH / NGPU : 1 ))
 LOADERS=$(( ($(nproc) - 1) / NGPU ))
 LOADERS=$(( LOADERS < 1 ? 1 : (LOADERS > 6 ? 6 : LOADERS) ))
 if [ "$NGPU" -gt 1 ]; then
@@ -53,7 +73,7 @@ if [ "$NGPU" -gt 1 ]; then
 else
     LAUNCH=("$VENV_DIR/bin/lerobot-train")
 fi
-echo "GPU ${NGPU} 個で学習します（1 GPU あたりのバッチ ${BATCH}、合計 $(( BATCH * NGPU ))）。"
+echo "GPU ${NGPU} 個で学習します（1 GPU あたりのバッチ ${BATCH}、合計 $(( BATCH * NGPU ))、${STEPS} ステップ）。"
 
 MODEL_ARGS=()
 if [ "$RESUMING" = "0" ]; then
@@ -72,13 +92,14 @@ fi
 run_in_background "train_${RUN}" \
     "${LAUNCH[@]}" \
     "${MODEL_ARGS[@]}" \
+    "${VLM_ARGS[@]}" \
     --dataset.repo_id="local/$DATASET" \
     --dataset.root="$REPO_DIR/data/$DATASET" \
     --policy.device=cuda \
     --policy.push_to_hub=false \
     --wandb.enable=false \
     --batch_size="$BATCH" \
-    --steps=20000 \
+    --steps="$STEPS" \
     --save_freq=5000 \
     --log_freq=100 \
     --num_workers="$LOADERS" \

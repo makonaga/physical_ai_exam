@@ -79,6 +79,25 @@ def test_language_target_is_nearest_piece_of_named_food(lang_env):
     assert len(named) > 1  # 指定する食材がエピソードごとに変わる
 
 
+def test_forced_food_changes_only_the_instruction(lang_env):
+    """デモ用: 指示する食材を決めても配置は同じで、掴む片だけが変わる seed がある."""
+    env = lang_env
+    same_layout = 0
+    try:
+        for seed in range(10):
+            layouts, targets = set(), set()
+            for food in FOODS:
+                env.forced_food = food
+                env.reset(seed=seed)
+                assert env.target_food == food
+                layouts.add(tuple(sorted(env.active_slots)))
+                targets.add(env.active_slots[0])
+            same_layout += len(layouts) == 1 and len(targets) == len(FOODS)
+    finally:
+        env.forced_food = None
+    assert same_layout >= 3
+
+
 def test_expert_follows_language(lang_env):
     env = lang_env
     expert = PotExpert(env)
