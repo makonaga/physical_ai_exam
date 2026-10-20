@@ -11,6 +11,7 @@
 # 学習データのカメラ名（overhead / wrist）は、事前学習済みモデルのカメラ名に自動で対応付ける
 # （src/so101_food/vla/rename_map.py）。
 #
+# 使う GPU は CUDA_VISIBLE_DEVICES で選べる（例: CUDA_VISIBLE_DEVICES=0,1,2,3 bash scripts/train_smolvla.sh ...）。
 # GPU が複数あるインスタンス（例: ml.g5.12xlarge は A10G × 4）では、全部の GPU で並列に学習する
 # （accelerate で GPU ごとに 1 プロセス）。1 GPU あたりのバッチを 64 ÷ GPU 数にして、合計のバッチ（64）と
 # ステップ数は 1 GPU のときと同じにするので、同じ学習をより短い時間で行える。
@@ -68,8 +69,11 @@ BATCH=$(( TOTAL_BATCH / NGPU > 0 ? TOTAL_BATCH / NGPU : 1 ))
 LOADERS=$(( ($(nproc) - 1) / NGPU ))
 LOADERS=$(( LOADERS < 1 ? 1 : (LOADERS > 6 ? 6 : LOADERS) ))
 if [ "$NGPU" -gt 1 ]; then
+    # GPU を分けて 2 つの学習を同時に動かしても、プロセス間の通信ポートがぶつからないよう空きポートを使う
+    PORT="$("$PY" -c "import socket; s = socket.socket(); s.bind(('', 0)); print(s.getsockname()[1])")"
     LAUNCH=("$VENV_DIR/bin/accelerate" launch --multi_gpu --num_processes="$NGPU" --num_machines=1
-            --mixed_precision=no --dynamo_backend=no "$VENV_DIR/bin/lerobot-train")
+            --main_process_port="$PORT" --mixed_precision=no --dynamo_backend=no
+            "$VENV_DIR/bin/lerobot-train")
 else
     LAUNCH=("$VENV_DIR/bin/lerobot-train")
 fi

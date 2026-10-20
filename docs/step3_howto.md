@@ -49,6 +49,25 @@ VLA（SmolVLA）でなければ解けない。指示文を読まない ACT も�
 
 GPU で 2 つの学習を同時に動かすと、どちらも遅くなるので、学習は 1 つずつ行う。
 
+### GPU が 8 個あるインスタンス（`ml.p4d.24xlarge`、A100 40GB × 8）でまとめて進める場合
+
+GPU を分けて E2・E3・E4 を同時に学習し、空いている CPU で E1 の評価も進める
+（使う GPU は `CUDA_VISIBLE_DEVICES` で選ぶ。学習スクリプトは見える GPU の数だけ並列に使う）。
+
+| GPU | 実験 | コマンド |
+|---|---|---|
+| 0〜3 | E4（画像部分も学習。合計バッチ 64 × 20,000 ステップ。GPU あたり 16） | `CUDA_VISIBLE_DEVICES=0,1,2,3 TRAIN_VLM=1 TOTAL_BATCH=64 bash scripts/train_smolvla.sh pot_lang_v1 smolvla_pot_lang_v1_vlm` |
+| 4・5 | E2（合計バッチ 64 × 20,000 ステップ。GPU あたり 32） | `CUDA_VISIBLE_DEVICES=4,5 bash scripts/train_smolvla.sh pot_lang_v1 smolvla_pot_lang_v1` |
+| 6 | E3（ACT） | `CUDA_VISIBLE_DEVICES=6 bash scripts/train_act.sh pot_lang_v1 act_pot_lang_v1 --steps=80000` |
+| ― | E1（CPU で評価。1 つずつ） | D-1 のコマンド |
+
+- A100 は GPU メモリが 40GB あるので、E4 も E2 と同じ合計バッチ 64・20,000 ステップにする（E2 との違いは
+  「画像部分・言語モデルも学習する」ことと学習率 5e-5 だけになり、比べやすい）。試運転は省き、始めて
+  10 分ほどでログに `step:` の行が出ること（`CUDA out of memory` で止まっていないこと）を確かめる。
+  メモリが足りないときは `TOTAL_BATCH=32`（40,000 ステップ）でやり直す。
+- 学習が全部終わったら、D-2・D-3 もこのインスタンスで実行できる（CPU 96 個。VLA の評価は `--workers 30` を
+  付けると速い）。料金が高いインスタンスなので、評価を `ml.c5.9xlarge` に移してもよい。
+
 インスタンスの切り替え方は [段階1](step1_howto.md) と同じ（スペースを Stop → Instance を変更 → Run space →
 Open JupyterLab）。起動したら毎回、ターミナル（File → New → Terminal）で次の 3 行を実行する。
 
