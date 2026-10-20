@@ -145,7 +145,7 @@ def _generate_shard(job: dict) -> dict:
 
 
 def main(argv: list[str] | None = None) -> None:
-    from so101_food.env.spec import TASKS, TaskSpec
+    from so101_food.env.spec import TASKS, TaskSpec, piece_counts
     from so101_food.utils.parallel import default_workers, prepare_workers, run_parallel
 
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawTextHelpFormatter)
@@ -186,18 +186,24 @@ def main(argv: list[str] | None = None) -> None:
         help="1 つの環境に入れる食材片の数（既定: pieces 20、multi / lang 24）",
     )
     ap.add_argument("--rebuild-every", type=int, default=10, help="食材片を選び直す試行回数の間隔")
-    ap.add_argument("--min-pieces", type=int, default=5, help="multi / lang で机に置く片の数の下限")
     ap.add_argument(
-        "--max-pieces", type=int, default=20, help="multi / lang で机に置く片の数の上限"
+        "--min-pieces", type=int, default=None, help="机に置く片の数の下限（既定 multi 5 / lang 7）"
+    )
+    ap.add_argument(
+        "--max-pieces",
+        type=int,
+        default=None,
+        help="机に置く片の数の上限（既定 multi 20 / lang 26）",
     )
     args = ap.parse_args(argv)
     pool_size = args.pool_size or (24 if args.task in ("multi", "lang") else 20)
+    min_pieces, max_pieces = piece_counts(args.task, args.min_pieces, args.max_pieces)
     task = TaskSpec(
         task=args.task,
         piece_set=args.piece_set,
         pool_size=pool_size,
-        min_pieces=args.min_pieces,
-        max_pieces=args.max_pieces,
+        min_pieces=min_pieces,
+        max_pieces=max_pieces,
     )
 
     out = args.out_dir / args.name

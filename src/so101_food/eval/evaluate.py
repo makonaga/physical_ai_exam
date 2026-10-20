@@ -192,7 +192,7 @@ def _success_by_food(results: list[dict]) -> dict:
 
 
 def main(argv: list[str] | None = None) -> None:
-    from so101_food.env.spec import TASKS, TaskSpec
+    from so101_food.env.spec import TASKS, TaskSpec, piece_counts
     from so101_food.utils.parallel import default_workers, prepare_workers, run_parallel
 
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawTextHelpFormatter)
@@ -226,9 +226,14 @@ def main(argv: list[str] | None = None) -> None:
     ap.add_argument(
         "--spawn-radius", type=float, default=0.07, help="配置範囲の半径（分布外評価用）"
     )
-    ap.add_argument("--min-pieces", type=int, default=5, help="multi / lang で机に置く片の数の下限")
     ap.add_argument(
-        "--max-pieces", type=int, default=20, help="multi / lang で机に置く片の数の上限"
+        "--min-pieces", type=int, default=None, help="机に置く片の数の下限（既定 multi 5 / lang 7）"
+    )
+    ap.add_argument(
+        "--max-pieces",
+        type=int,
+        default=None,
+        help="机に置く片の数の上限（既定 multi 20 / lang 26）",
     )
     ap.add_argument("--n-action-steps", type=int, default=None, help="行動チャンクのうち実行する数")
     ap.add_argument(
@@ -242,14 +247,15 @@ def main(argv: list[str] | None = None) -> None:
     )
     ap.add_argument("--out-dir", type=Path, default=REPO / "outputs" / "eval")
     args = ap.parse_args(argv)
+    min_pieces, max_pieces = piece_counts(args.task, args.min_pieces, args.max_pieces)
     task = TaskSpec(
         task=args.task,
         cube_mm=args.cube_mm,
         piece_set=args.piece_set,
         pool_size=1,  # 評価ではエピソードごとに選ぶ（multi では max_pieces 個）
         spawn_radius=args.spawn_radius,
-        min_pieces=args.min_pieces,
-        max_pieces=args.max_pieces,
+        min_pieces=min_pieces,
+        max_pieces=max_pieces,
     )
 
     out = args.out_dir / args.name

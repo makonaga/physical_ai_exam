@@ -10,7 +10,7 @@ import trimesh  # noqa: E402
 
 from so101_food.env.factory import make_env, split_of  # noqa: E402
 from so101_food.env.pot_task import TASK_DESCRIPTION_LANGUAGE, failure_reason  # noqa: E402
-from so101_food.env.spec import TaskSpec  # noqa: E402
+from so101_food.env.spec import TaskSpec, piece_counts  # noqa: E402
 from so101_food.expert.pot_expert import PotExpert, run_expert_episode  # noqa: E402
 from so101_food.shapes.cut import FOOD_DENSITY, PieceSpec, support_margin  # noqa: E402
 from so101_food.shapes.library import DEFAULT_SETS, load_set  # noqa: E402
@@ -20,7 +20,9 @@ FOODS = ("carrot", "potato", "daikon")
 
 @pytest.fixture(scope="module")
 def lang_env():
-    env = make_env(TaskSpec(task="lang", piece_set="test", pool_size=24), np.random.default_rng(0))
+    lo, hi = piece_counts("lang")
+    spec = TaskSpec(task="lang", piece_set="test", pool_size=24, min_pieces=lo, max_pieces=hi)
+    env = make_env(spec, np.random.default_rng(0))
     env.scene_check = PotExpert(env).can_grasp
     yield env
     env.close()
@@ -46,6 +48,12 @@ def test_food_shapes_and_densities():
         volume = trimesh.load(piece.path, force="mesh").volume
         assert piece.mass_kg == pytest.approx(volume * density, rel=1e-3)
     assert FOOD_DENSITY["potato"] > FOOD_DENSITY["carrot"] > FOOD_DENSITY["daikon"]
+
+
+def test_lang_has_more_pieces_than_multi():
+    assert piece_counts("lang") == (7, 26)  # 段階2（5〜20 個）の 3 割増し
+    assert piece_counts("multi") == (5, 20)
+    assert piece_counts("lang", 5, 20) == (5, 20)
 
 
 def test_split_of():
