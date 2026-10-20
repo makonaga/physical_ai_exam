@@ -6,1402 +6,1402 @@
   {
    "name": "daikon_0000",
    "food": "daikon",
-   "style": "random",
-   "volume_cm3": 12.867,
-   "mass_kg": 0.01222,
+   "style": "ichou",
+   "volume_cm3": 10.787,
+   "mass_kg": 0.01046,
    "extents_mm": [
-    31.9,
-    31.0,
-    26.3
+    26.8,
+    27.0,
+    19.0
    ],
-   "min_width_mm": 26.3,
-   "n_vertices": 18
+   "min_width_mm": 19.0,
+   "n_vertices": 54
   },
   {
    "name": "daikon_0001",
    "food": "daikon",
-   "style": "random",
-   "volume_cm3": 11.734,
-   "mass_kg": 0.01115,
+   "style": "ichou",
+   "volume_cm3": 6.66,
+   "mass_kg": 0.00646,
    "extents_mm": [
-    33.1,
-    28.5,
-    24.9
+    23.8,
+    23.7,
+    15.3
    ],
-   "min_width_mm": 24.9,
-   "n_vertices": 38
+   "min_width_mm": 15.3,
+   "n_vertices": 54
   },
   {
    "name": "daikon_0002",
    "food": "daikon",
-   "style": "dice",
-   "volume_cm3": 10.647,
-   "mass_kg": 0.01011,
+   "style": "ichou",
+   "volume_cm3": 6.793,
+   "mass_kg": 0.00659,
    "extents_mm": [
-    25.9,
-    21.6,
-    19.4
+    24.4,
+    24.4,
+    15.2
    ],
-   "min_width_mm": 19.4,
-   "n_vertices": 8
+   "min_width_mm": 15.2,
+   "n_vertices": 52
   },
   {
    "name": "daikon_0003",
    "food": "daikon",
-   "style": "random",
-   "volume_cm3": 8.84,
-   "mass_kg": 0.0084,
+   "style": "ichou",
+   "volume_cm3": 10.913,
+   "mass_kg": 0.01059,
    "extents_mm": [
-    29.9,
-    29.9,
-    23.9
+    28.0,
+    28.0,
+    18.3
    ],
-   "min_width_mm": 23.9,
-   "n_vertices": 18
+   "min_width_mm": 18.3,
+   "n_vertices": 52
   },
   {
    "name": "daikon_0004",
    "food": "daikon",
-   "style": "random",
-   "volume_cm3": 5.799,
-   "mass_kg": 0.00551,
+   "style": "ichou",
+   "volume_cm3": 9.873,
+   "mass_kg": 0.00958,
    "extents_mm": [
-    21.7,
-    31.7,
-    18.1
+    26.0,
+    25.0,
+    19.9
    ],
-   "min_width_mm": 17.9,
-   "n_vertices": 20
+   "min_width_mm": 19.9,
+   "n_vertices": 56
   },
   {
    "name": "daikon_0005",
    "food": "daikon",
-   "style": "dice",
-   "volume_cm3": 7.845,
-   "mass_kg": 0.00745,
+   "style": "ichou",
+   "volume_cm3": 9.755,
+   "mass_kg": 0.00946,
    "extents_mm": [
-    21.2,
-    20.7,
-    18.2
+    27.3,
+    27.1,
+    17.0
    ],
-   "min_width_mm": 18.2,
-   "n_vertices": 8
+   "min_width_mm": 17.0,
+   "n_vertices": 54
   },
   {
    "name": "daikon_0006",
    "food": "daikon",
-   "style": "random",
-   "volume_cm3": 9.679,
-   "mass_kg": 0.00919,
+   "style": "ichou",
+   "volume_cm3": 8.216,
+   "mass_kg": 0.00797,
    "extents_mm": [
-    30.6,
-    25.6,
-    25.5
+    26.5,
+    26.1,
+    15.3
    ],
-   "min_width_mm": 21.6,
-   "n_vertices": 20
+   "min_width_mm": 15.3,
+   "n_vertices": 54
   },
   {
    "name": "daikon_0007",
    "food": "daikon",
-   "style": "random",
-   "volume_cm3": 8.034,
-   "mass_kg": 0.00763,
+   "style": "ichou",
+   "volume_cm3": 8.097,
+   "mass_kg": 0.00785,
    "extents_mm": [
-    32.3,
-    26.2,
-    24.9
+    23.6,
+    23.6,
+    19.4
    ],
-   "min_width_mm": 24.1,
-   "n_vertices": 18
+   "min_width_mm": 19.4,
+   "n_vertices": 52
   },
   {
    "name": "daikon_0008",
    "food": "daikon",
-   "style": "dice",
-   "volume_cm3": 11.432,
-   "mass_kg": 0.01086,
+   "style": "ichou",
+   "volume_cm3": 10.024,
+   "mass_kg": 0.00972,
    "extents_mm": [
-    24.0,
-    25.4,
-    18.9
+    26.1,
+    26.0,
+    19.4
    ],
-   "min_width_mm": 18.9,
-   "n_vertices": 8
+   "min_width_mm": 19.4,
+   "n_vertices": 52
   },
   {
    "name": "daikon_0009",
    "food": "daikon",
-   "style": "random",
-   "volume_cm3": 8.088,
-   "mass_kg": 0.00768,
+   "style": "ichou",
+   "volume_cm3": 10.788,
+   "mass_kg": 0.01046,
    "extents_mm": [
-    31.3,
     27.4,
-    25.1
+    27.3,
+    19.4
    ],
-   "min_width_mm": 21.2,
-   "n_vertices": 12
+   "min_width_mm": 19.4,
+   "n_vertices": 52
   },
   {
    "name": "daikon_0010",
    "food": "daikon",
-   "style": "random",
-   "volume_cm3": 7.464,
-   "mass_kg": 0.00709,
+   "style": "ichou",
+   "volume_cm3": 8.124,
+   "mass_kg": 0.00788,
    "extents_mm": [
-    24.4,
-    28.4,
-    23.9
+    26.3,
+    26.2,
+    15.0
    ],
-   "min_width_mm": 22.3,
-   "n_vertices": 20
+   "min_width_mm": 15.0,
+   "n_vertices": 54
   },
   {
    "name": "daikon_0011",
    "food": "daikon",
-   "style": "dice",
-   "volume_cm3": 14.077,
-   "mass_kg": 0.01337,
+   "style": "ichou",
+   "volume_cm3": 7.479,
+   "mass_kg": 0.00725,
    "extents_mm": [
-    28.2,
-    27.3,
-    18.8
+    24.6,
+    24.6,
+    16.0
    ],
-   "min_width_mm": 18.8,
-   "n_vertices": 16
+   "min_width_mm": 16.0,
+   "n_vertices": 54
   },
   {
    "name": "daikon_0012",
    "food": "daikon",
-   "style": "random",
-   "volume_cm3": 14.607,
-   "mass_kg": 0.01388,
+   "style": "ichou",
+   "volume_cm3": 9.018,
+   "mass_kg": 0.00875,
    "extents_mm": [
-    34.6,
-    33.9,
-    24.9
+    26.8,
+    26.8,
+    16.6
    ],
-   "min_width_mm": 24.8,
-   "n_vertices": 30
+   "min_width_mm": 16.6,
+   "n_vertices": 52
   },
   {
    "name": "daikon_0013",
    "food": "daikon",
-   "style": "random",
-   "volume_cm3": 12.379,
-   "mass_kg": 0.01176,
+   "style": "ichou",
+   "volume_cm3": 9.602,
+   "mass_kg": 0.00931,
    "extents_mm": [
-    32.6,
-    27.5,
-    27.3
+    26.8,
+    26.9,
+    17.2
    ],
-   "min_width_mm": 26.3,
-   "n_vertices": 22
+   "min_width_mm": 17.2,
+   "n_vertices": 56
   },
   {
    "name": "daikon_0014",
    "food": "daikon",
-   "style": "dice",
-   "volume_cm3": 10.853,
-   "mass_kg": 0.01031,
+   "style": "ichou",
+   "volume_cm3": 7.387,
+   "mass_kg": 0.00717,
    "extents_mm": [
-    25.0,
-    24.1,
-    18.0
+    24.6,
+    23.4,
+    16.6
    ],
-   "min_width_mm": 18.0,
-   "n_vertices": 8
+   "min_width_mm": 16.6,
+   "n_vertices": 56
   },
   {
    "name": "daikon_0015",
    "food": "daikon",
-   "style": "random",
-   "volume_cm3": 7.241,
-   "mass_kg": 0.00688,
+   "style": "ichou",
+   "volume_cm3": 8.385,
+   "mass_kg": 0.00813,
    "extents_mm": [
-    24.8,
-    24.8,
-    21.6
+    25.0,
+    25.0,
+    17.5
    ],
-   "min_width_mm": 21.6,
-   "n_vertices": 28
+   "min_width_mm": 17.5,
+   "n_vertices": 52
   },
   {
    "name": "daikon_0016",
    "food": "daikon",
-   "style": "random",
-   "volume_cm3": 8.566,
-   "mass_kg": 0.00814,
+   "style": "ichou",
+   "volume_cm3": 7.191,
+   "mass_kg": 0.00698,
    "extents_mm": [
-    24.9,
-    31.8,
-    22.5
+    22.1,
+    22.1,
+    19.7
    ],
-   "min_width_mm": 22.4,
-   "n_vertices": 20
+   "min_width_mm": 19.7,
+   "n_vertices": 52
   },
   {
    "name": "daikon_0017",
    "food": "daikon",
-   "style": "dice",
-   "volume_cm3": 12.36,
-   "mass_kg": 0.01174,
+   "style": "ichou",
+   "volume_cm3": 10.181,
+   "mass_kg": 0.00988,
    "extents_mm": [
-    26.4,
-    21.9,
-    21.6
+    27.7,
+    28.6,
+    16.8
    ],
-   "min_width_mm": 21.6,
-   "n_vertices": 8
+   "min_width_mm": 16.8,
+   "n_vertices": 56
   },
   {
    "name": "daikon_0018",
    "food": "daikon",
-   "style": "random",
-   "volume_cm3": 9.558,
-   "mass_kg": 0.00908,
+   "style": "ichou",
+   "volume_cm3": 9.261,
+   "mass_kg": 0.00898,
    "extents_mm": [
-    26.3,
-    26.8,
-    24.9
+    24.5,
+    24.6,
+    19.7
    ],
-   "min_width_mm": 24.5,
-   "n_vertices": 20
+   "min_width_mm": 19.7,
+   "n_vertices": 54
   },
   {
    "name": "daikon_0019",
    "food": "daikon",
-   "style": "random",
-   "volume_cm3": 7.714,
-   "mass_kg": 0.00733,
+   "style": "ichou",
+   "volume_cm3": 8.232,
+   "mass_kg": 0.00799,
    "extents_mm": [
-    25.1,
-    27.8,
-    20.9
+    24.2,
+    23.5,
+    18.7
    ],
-   "min_width_mm": 20.9,
-   "n_vertices": 18
+   "min_width_mm": 18.7,
+   "n_vertices": 54
   },
   {
    "name": "daikon_0020",
    "food": "daikon",
-   "style": "dice",
-   "volume_cm3": 10.646,
-   "mass_kg": 0.01011,
+   "style": "ichou",
+   "volume_cm3": 8.987,
+   "mass_kg": 0.00872,
    "extents_mm": [
-    21.7,
-    25.3,
-    19.8
+    26.1,
+    26.1,
+    17.3
    ],
-   "min_width_mm": 19.8,
-   "n_vertices": 8
+   "min_width_mm": 17.3,
+   "n_vertices": 52
   },
   {
    "name": "daikon_0021",
    "food": "daikon",
-   "style": "random",
-   "volume_cm3": 6.49,
-   "mass_kg": 0.00617,
+   "style": "ichou",
+   "volume_cm3": 8.328,
+   "mass_kg": 0.00808,
    "extents_mm": [
-    29.9,
-    24.2,
-    20.2
+    26.1,
+    26.4,
+    15.5
    ],
-   "min_width_mm": 20.2,
-   "n_vertices": 20
+   "min_width_mm": 15.5,
+   "n_vertices": 56
   },
   {
    "name": "daikon_0022",
    "food": "daikon",
-   "style": "random",
-   "volume_cm3": 6.511,
-   "mass_kg": 0.00619,
+   "style": "ichou",
+   "volume_cm3": 9.131,
+   "mass_kg": 0.00886,
    "extents_mm": [
-    28.5,
-    29.0,
-    18.4
+    27.2,
+    25.8,
+    16.9
    ],
-   "min_width_mm": 18.4,
-   "n_vertices": 20
+   "min_width_mm": 16.9,
+   "n_vertices": 56
   },
   {
    "name": "daikon_0023",
    "food": "daikon",
-   "style": "dice",
-   "volume_cm3": 8.662,
-   "mass_kg": 0.00823,
+   "style": "ichou",
+   "volume_cm3": 7.383,
+   "mass_kg": 0.00716,
    "extents_mm": [
-    19.1,
-    24.1,
-    18.9
+    24.4,
+    23.2,
+    17.0
    ],
-   "min_width_mm": 18.9,
-   "n_vertices": 10
+   "min_width_mm": 17.0,
+   "n_vertices": 56
   },
   {
    "name": "daikon_0024",
    "food": "daikon",
-   "style": "random",
-   "volume_cm3": 11.687,
-   "mass_kg": 0.0111,
+   "style": "ichou",
+   "volume_cm3": 8.709,
+   "mass_kg": 0.00845,
    "extents_mm": [
-    27.5,
-    30.8,
-    26.6
+    24.8,
+    24.3,
+    18.6
    ],
-   "min_width_mm": 26.0,
-   "n_vertices": 20
+   "min_width_mm": 18.6,
+   "n_vertices": 54
   },
   {
    "name": "daikon_0025",
    "food": "daikon",
-   "style": "random",
-   "volume_cm3": 10.14,
-   "mass_kg": 0.00963,
+   "style": "ichou",
+   "volume_cm3": 12.283,
+   "mass_kg": 0.01191,
    "extents_mm": [
-    32.3,
-    27.3,
-    25.4
+    28.6,
+    27.7,
+    20.0
    ],
-   "min_width_mm": 24.4,
-   "n_vertices": 24
+   "min_width_mm": 20.0,
+   "n_vertices": 56
   },
   {
    "name": "daikon_0026",
    "food": "daikon",
-   "style": "dice",
-   "volume_cm3": 11.652,
-   "mass_kg": 0.01107,
+   "style": "ichou",
+   "volume_cm3": 9.142,
+   "mass_kg": 0.00887,
    "extents_mm": [
-    21.6,
-    27.4,
-    20.3
+    27.0,
+    27.7,
+    15.8
    ],
-   "min_width_mm": 20.3,
-   "n_vertices": 8
+   "min_width_mm": 15.8,
+   "n_vertices": 56
   },
   {
    "name": "daikon_0027",
    "food": "daikon",
-   "style": "random",
-   "volume_cm3": 10.31,
-   "mass_kg": 0.00979,
+   "style": "ichou",
+   "volume_cm3": 9.86,
+   "mass_kg": 0.00956,
    "extents_mm": [
-    33.2,
-    25.1,
-    23.2
+    27.3,
+    27.1,
+    17.0
    ],
-   "min_width_mm": 23.2,
-   "n_vertices": 28
+   "min_width_mm": 17.0,
+   "n_vertices": 54
   },
   {
    "name": "daikon_0028",
    "food": "daikon",
-   "style": "random",
-   "volume_cm3": 7.126,
-   "mass_kg": 0.00677,
+   "style": "ichou",
+   "volume_cm3": 9.428,
+   "mass_kg": 0.00915,
    "extents_mm": [
-    27.3,
-    25.2,
-    20.7
+    24.9,
+    24.9,
+    19.8
    ],
-   "min_width_mm": 20.3,
-   "n_vertices": 20
+   "min_width_mm": 19.8,
+   "n_vertices": 54
   },
   {
    "name": "daikon_0029",
    "food": "daikon",
-   "style": "dice",
-   "volume_cm3": 11.856,
-   "mass_kg": 0.01126,
+   "style": "ichou",
+   "volume_cm3": 6.963,
+   "mass_kg": 0.00675,
    "extents_mm": [
-    23.9,
-    24.6,
-    20.7
+    24.4,
+    24.4,
+    15.0
    ],
-   "min_width_mm": 20.7,
-   "n_vertices": 8
+   "min_width_mm": 15.0,
+   "n_vertices": 54
   },
   {
    "name": "daikon_0030",
    "food": "daikon",
-   "style": "random",
-   "volume_cm3": 11.535,
-   "mass_kg": 0.01096,
+   "style": "ichou",
+   "volume_cm3": 10.764,
+   "mass_kg": 0.01044,
    "extents_mm": [
-    32.1,
-    33.1,
-    25.2
+    26.0,
+    27.5,
+    19.7
    ],
-   "min_width_mm": 25.2,
-   "n_vertices": 32
+   "min_width_mm": 19.7,
+   "n_vertices": 56
   },
   {
    "name": "daikon_0031",
    "food": "daikon",
-   "style": "random",
-   "volume_cm3": 9.678,
-   "mass_kg": 0.00919,
+   "style": "ichou",
+   "volume_cm3": 8.687,
+   "mass_kg": 0.00843,
    "extents_mm": [
-    30.9,
-    27.7,
-    24.6
+    24.0,
+    23.9,
+    19.9
    ],
-   "min_width_mm": 24.6,
-   "n_vertices": 24
+   "min_width_mm": 19.9,
+   "n_vertices": 52
   },
   {
    "name": "daikon_0032",
    "food": "daikon",
-   "style": "dice",
-   "volume_cm3": 11.876,
-   "mass_kg": 0.01128,
+   "style": "ichou",
+   "volume_cm3": 8.906,
+   "mass_kg": 0.00864,
    "extents_mm": [
-    25.1,
-    24.3,
-    20.0
+    27.1,
+    26.9,
+    15.8
    ],
-   "min_width_mm": 20.0,
-   "n_vertices": 8
+   "min_width_mm": 15.8,
+   "n_vertices": 54
   },
   {
    "name": "daikon_0033",
    "food": "daikon",
-   "style": "random",
-   "volume_cm3": 7.38,
-   "mass_kg": 0.00701,
+   "style": "ichou",
+   "volume_cm3": 7.911,
+   "mass_kg": 0.00767,
    "extents_mm": [
-    26.4,
-    26.9,
-    19.4
+    23.7,
+    22.4,
+    19.3
    ],
    "min_width_mm": 19.3,
-   "n_vertices": 20
+   "n_vertices": 56
   },
   {
    "name": "daikon_0034",
    "food": "daikon",
-   "style": "random",
-   "volume_cm3": 7.111,
-   "mass_kg": 0.00676,
+   "style": "ichou",
+   "volume_cm3": 7.033,
+   "mass_kg": 0.00682,
    "extents_mm": [
-    28.2,
-    23.9,
-    20.0
+    22.8,
+    22.8,
+    17.6
    ],
-   "min_width_mm": 20.0,
-   "n_vertices": 20
+   "min_width_mm": 17.6,
+   "n_vertices": 52
   },
   {
    "name": "daikon_0035",
    "food": "daikon",
-   "style": "dice",
-   "volume_cm3": 12.143,
-   "mass_kg": 0.01154,
+   "style": "ichou",
+   "volume_cm3": 8.309,
+   "mass_kg": 0.00806,
    "extents_mm": [
-    22.0,
-    27.6,
-    20.9
+    25.0,
+    24.9,
+    17.8
    ],
-   "min_width_mm": 20.9,
-   "n_vertices": 22
+   "min_width_mm": 17.8,
+   "n_vertices": 52
   },
   {
    "name": "daikon_0036",
    "food": "daikon",
-   "style": "random",
-   "volume_cm3": 8.981,
-   "mass_kg": 0.00853,
+   "style": "ichou",
+   "volume_cm3": 9.464,
+   "mass_kg": 0.00918,
    "extents_mm": [
-    34.2,
-    24.0,
-    23.8
+    27.2,
+    27.2,
+    16.4
    ],
-   "min_width_mm": 21.9,
-   "n_vertices": 20
+   "min_width_mm": 16.4,
+   "n_vertices": 54
   },
   {
    "name": "daikon_0037",
    "food": "daikon",
-   "style": "random",
-   "volume_cm3": 10.202,
-   "mass_kg": 0.00969,
+   "style": "ichou",
+   "volume_cm3": 5.689,
+   "mass_kg": 0.00552,
    "extents_mm": [
-    31.2,
-    30.0,
-    22.2
+    22.3,
+    22.3,
+    15.0
    ],
-   "min_width_mm": 22.2,
-   "n_vertices": 20
+   "min_width_mm": 15.0,
+   "n_vertices": 52
   },
   {
    "name": "daikon_0038",
    "food": "daikon",
-   "style": "dice",
-   "volume_cm3": 8.963,
-   "mass_kg": 0.00852,
+   "style": "ichou",
+   "volume_cm3": 9.312,
+   "mass_kg": 0.00903,
    "extents_mm": [
-    20.7,
-    22.9,
-    19.0
+    24.4,
+    25.3,
+    19.6
    ],
-   "min_width_mm": 19.0,
-   "n_vertices": 8
+   "min_width_mm": 19.6,
+   "n_vertices": 56
   },
   {
    "name": "daikon_0039",
    "food": "daikon",
-   "style": "random",
-   "volume_cm3": 10.552,
-   "mass_kg": 0.01002,
+   "style": "ichou",
+   "volume_cm3": 8.559,
+   "mass_kg": 0.0083,
    "extents_mm": [
-    28.4,
-    31.8,
-    25.1
+    25.6,
+    24.9,
+    17.3
    ],
-   "min_width_mm": 25.1,
-   "n_vertices": 26
+   "min_width_mm": 17.3,
+   "n_vertices": 54
   },
   {
    "name": "daikon_0040",
    "food": "daikon",
-   "style": "random",
-   "volume_cm3": 9.452,
-   "mass_kg": 0.00898,
+   "style": "ichou",
+   "volume_cm3": 9.981,
+   "mass_kg": 0.00968,
    "extents_mm": [
-    33.5,
-    24.5,
-    19.5
+    28.5,
+    27.2,
+    16.7
    ],
-   "min_width_mm": 19.5,
-   "n_vertices": 18
+   "min_width_mm": 16.7,
+   "n_vertices": 56
   },
   {
    "name": "daikon_0041",
    "food": "daikon",
-   "style": "dice",
-   "volume_cm3": 13.959,
-   "mass_kg": 0.01326,
+   "style": "ichou",
+   "volume_cm3": 8.623,
+   "mass_kg": 0.00836,
    "extents_mm": [
-    28.8,
-    24.2,
-    20.1
+    24.9,
+    25.0,
+    18.0
    ],
-   "min_width_mm": 20.1,
-   "n_vertices": 8
+   "min_width_mm": 18.0,
+   "n_vertices": 56
   },
   {
    "name": "daikon_0042",
    "food": "daikon",
-   "style": "random",
-   "volume_cm3": 7.32,
-   "mass_kg": 0.00695,
+   "style": "ichou",
+   "volume_cm3": 9.266,
+   "mass_kg": 0.00899,
    "extents_mm": [
-    30.9,
-    25.0,
-    20.9
+    25.1,
+    25.8,
+    18.5
    ],
-   "min_width_mm": 20.9,
-   "n_vertices": 20
+   "min_width_mm": 18.5,
+   "n_vertices": 56
   },
   {
    "name": "daikon_0043",
    "food": "daikon",
-   "style": "random",
-   "volume_cm3": 9.228,
-   "mass_kg": 0.00877,
+   "style": "ichou",
+   "volume_cm3": 5.57,
+   "mass_kg": 0.0054,
    "extents_mm": [
-    30.7,
-    29.7,
-    20.8
+    22.0,
+    22.0,
+    15.2
    ],
-   "min_width_mm": 20.8,
-   "n_vertices": 24
+   "min_width_mm": 15.2,
+   "n_vertices": 52
   },
   {
    "name": "daikon_0044",
    "food": "daikon",
-   "style": "dice",
-   "volume_cm3": 9.798,
-   "mass_kg": 0.00931,
+   "style": "ichou",
+   "volume_cm3": 6.479,
+   "mass_kg": 0.00628,
    "extents_mm": [
-    22.4,
-    22.0,
-    20.3
+    23.3,
+    23.2,
+    16.0
    ],
-   "min_width_mm": 20.3,
-   "n_vertices": 12
+   "min_width_mm": 16.0,
+   "n_vertices": 52
   },
   {
    "name": "daikon_0045",
    "food": "daikon",
-   "style": "random",
-   "volume_cm3": 8.847,
-   "mass_kg": 0.0084,
+   "style": "ichou",
+   "volume_cm3": 8.011,
+   "mass_kg": 0.00777,
    "extents_mm": [
-    30.1,
-    32.1,
-    18.9
+    23.5,
+    24.7,
+    18.0
    ],
-   "min_width_mm": 18.9,
-   "n_vertices": 28
+   "min_width_mm": 18.0,
+   "n_vertices": 56
   },
   {
    "name": "daikon_0046",
    "food": "daikon",
-   "style": "random",
-   "volume_cm3": 5.847,
-   "mass_kg": 0.00555,
+   "style": "ichou",
+   "volume_cm3": 7.608,
+   "mass_kg": 0.00738,
    "extents_mm": [
-    25.3,
-    22.0,
-    21.7
+    24.1,
+    24.3,
+    16.8
    ],
-   "min_width_mm": 18.2,
-   "n_vertices": 16
+   "min_width_mm": 16.8,
+   "n_vertices": 54
   },
   {
    "name": "daikon_0047",
    "food": "daikon",
-   "style": "dice",
-   "volume_cm3": 14.045,
-   "mass_kg": 0.01334,
+   "style": "ichou",
+   "volume_cm3": 10.611,
+   "mass_kg": 0.01029,
    "extents_mm": [
-    26.8,
-    24.7,
-    21.6
+    28.1,
+    26.1,
+    18.9
    ],
-   "min_width_mm": 21.6,
-   "n_vertices": 18
+   "min_width_mm": 18.9,
+   "n_vertices": 56
   },
   {
    "name": "daikon_0048",
    "food": "daikon",
-   "style": "random",
-   "volume_cm3": 7.84,
-   "mass_kg": 0.00745,
+   "style": "ichou",
+   "volume_cm3": 8.415,
+   "mass_kg": 0.00816,
    "extents_mm": [
-    25.3,
-    33.0,
-    24.1
+    24.3,
+    24.2,
+    18.5
    ],
-   "min_width_mm": 22.9,
-   "n_vertices": 26
+   "min_width_mm": 18.5,
+   "n_vertices": 54
   },
   {
    "name": "daikon_0049",
    "food": "daikon",
-   "style": "random",
-   "volume_cm3": 7.353,
-   "mass_kg": 0.00698,
+   "style": "ichou",
+   "volume_cm3": 9.593,
+   "mass_kg": 0.00931,
    "extents_mm": [
-    32.0,
-    26.5,
-    22.3
+    27.8,
+    27.8,
+    16.2
    ],
-   "min_width_mm": 21.9,
-   "n_vertices": 20
+   "min_width_mm": 16.2,
+   "n_vertices": 56
   },
   {
    "name": "daikon_0050",
    "food": "daikon",
-   "style": "dice",
-   "volume_cm3": 11.951,
-   "mass_kg": 0.01135,
+   "style": "ichou",
+   "volume_cm3": 9.205,
+   "mass_kg": 0.00893,
    "extents_mm": [
-    23.4,
-    25.6,
-    20.2
+    25.2,
+    25.0,
+    18.6
    ],
-   "min_width_mm": 20.2,
-   "n_vertices": 8
+   "min_width_mm": 18.6,
+   "n_vertices": 54
   },
   {
    "name": "daikon_0051",
    "food": "daikon",
-   "style": "random",
-   "volume_cm3": 8.988,
-   "mass_kg": 0.00854,
+   "style": "ichou",
+   "volume_cm3": 7.447,
+   "mass_kg": 0.00722,
    "extents_mm": [
-    29.6,
-    30.4,
-    20.1
+    23.9,
+    23.9,
+    17.5
    ],
-   "min_width_mm": 19.9,
-   "n_vertices": 24
+   "min_width_mm": 17.5,
+   "n_vertices": 52
   },
   {
    "name": "daikon_0052",
    "food": "daikon",
-   "style": "random",
-   "volume_cm3": 9.727,
-   "mass_kg": 0.00924,
+   "style": "ichou",
+   "volume_cm3": 6.853,
+   "mass_kg": 0.00665,
    "extents_mm": [
-    28.1,
-    27.8,
-    26.3
+    22.3,
+    22.3,
+    17.6
    ],
-   "min_width_mm": 24.2,
-   "n_vertices": 20
+   "min_width_mm": 17.6,
+   "n_vertices": 54
   },
   {
    "name": "daikon_0053",
    "food": "daikon",
-   "style": "dice",
-   "volume_cm3": 11.062,
-   "mass_kg": 0.01051,
+   "style": "ichou",
+   "volume_cm3": 8.703,
+   "mass_kg": 0.00844,
    "extents_mm": [
-    23.9,
-    22.3,
-    21.3
+    27.5,
+    27.0,
+    15.1
    ],
-   "min_width_mm": 21.3,
-   "n_vertices": 8
+   "min_width_mm": 15.1,
+   "n_vertices": 54
   },
   {
    "name": "daikon_0054",
    "food": "daikon",
-   "style": "random",
-   "volume_cm3": 10.231,
-   "mass_kg": 0.00972,
+   "style": "ichou",
+   "volume_cm3": 9.019,
+   "mass_kg": 0.00875,
    "extents_mm": [
-    27.6,
-    25.8,
-    23.0
+    25.9,
+    24.9,
+    18.0
    ],
-   "min_width_mm": 23.0,
-   "n_vertices": 20
+   "min_width_mm": 18.0,
+   "n_vertices": 56
   },
   {
    "name": "daikon_0055",
    "food": "daikon",
-   "style": "random",
-   "volume_cm3": 9.64,
-   "mass_kg": 0.00916,
+   "style": "ichou",
+   "volume_cm3": 8.844,
+   "mass_kg": 0.00858,
    "extents_mm": [
-    33.1,
-    24.0,
-    22.7
+    25.1,
+    25.1,
+    17.8
    ],
-   "min_width_mm": 22.7,
-   "n_vertices": 20
+   "min_width_mm": 17.8,
+   "n_vertices": 54
   },
   {
    "name": "daikon_0056",
    "food": "daikon",
-   "style": "dice",
-   "volume_cm3": 7.279,
-   "mass_kg": 0.00692,
+   "style": "ichou",
+   "volume_cm3": 8.471,
+   "mass_kg": 0.00822,
    "extents_mm": [
-    19.4,
-    19.8,
-    19.2
+    25.9,
+    25.7,
+    16.2
    ],
-   "min_width_mm": 19.2,
-   "n_vertices": 8
+   "min_width_mm": 16.2,
+   "n_vertices": 54
   },
   {
    "name": "daikon_0057",
    "food": "daikon",
-   "style": "random",
-   "volume_cm3": 7.391,
-   "mass_kg": 0.00702,
+   "style": "ichou",
+   "volume_cm3": 8.96,
+   "mass_kg": 0.00869,
    "extents_mm": [
-    25.6,
-    26.6,
-    20.3
+    28.3,
+    26.0,
+    16.0
    ],
-   "min_width_mm": 20.3,
-   "n_vertices": 18
+   "min_width_mm": 16.0,
+   "n_vertices": 56
   },
   {
    "name": "daikon_0058",
    "food": "daikon",
-   "style": "random",
-   "volume_cm3": 9.376,
-   "mass_kg": 0.00891,
+   "style": "ichou",
+   "volume_cm3": 10.645,
+   "mass_kg": 0.01033,
    "extents_mm": [
-    30.7,
-    28.0,
-    22.3
+    26.5,
+    26.5,
+    19.8
    ],
-   "min_width_mm": 22.3,
-   "n_vertices": 18
+   "min_width_mm": 19.8,
+   "n_vertices": 52
   },
   {
    "name": "daikon_0059",
    "food": "daikon",
-   "style": "dice",
-   "volume_cm3": 8.604,
-   "mass_kg": 0.00817,
+   "style": "ichou",
+   "volume_cm3": 7.399,
+   "mass_kg": 0.00718,
    "extents_mm": [
-    21.1,
-    20.7,
-    20.3
+    24.7,
+    24.6,
+    16.3
    ],
-   "min_width_mm": 20.3,
-   "n_vertices": 8
+   "min_width_mm": 16.3,
+   "n_vertices": 52
   },
   {
    "name": "daikon_0060",
    "food": "daikon",
-   "style": "random",
-   "volume_cm3": 9.32,
-   "mass_kg": 0.00885,
+   "style": "ichou",
+   "volume_cm3": 6.48,
+   "mass_kg": 0.00629,
    "extents_mm": [
-    32.3,
-    25.2,
-    24.9
+    22.3,
+    23.3,
+    16.2
    ],
-   "min_width_mm": 21.5,
-   "n_vertices": 20
+   "min_width_mm": 16.2,
+   "n_vertices": 56
   },
   {
    "name": "daikon_0061",
    "food": "daikon",
-   "style": "random",
-   "volume_cm3": 12.61,
-   "mass_kg": 0.01198,
+   "style": "ichou",
+   "volume_cm3": 7.442,
+   "mass_kg": 0.00722,
    "extents_mm": [
-    31.1,
-    30.3,
-    26.3
+    23.0,
+    23.0,
+    18.4
    ],
-   "min_width_mm": 26.3,
-   "n_vertices": 12
+   "min_width_mm": 18.4,
+   "n_vertices": 52
   },
   {
    "name": "daikon_0062",
    "food": "daikon",
-   "style": "dice",
-   "volume_cm3": 11.589,
-   "mass_kg": 0.01101,
+   "style": "ichou",
+   "volume_cm3": 6.413,
+   "mass_kg": 0.00622,
    "extents_mm": [
-    24.1,
     22.9,
-    21.5
+    22.6,
+    16.0
    ],
-   "min_width_mm": 21.5,
-   "n_vertices": 14
+   "min_width_mm": 16.0,
+   "n_vertices": 54
   },
   {
    "name": "daikon_0063",
    "food": "daikon",
-   "style": "random",
-   "volume_cm3": 6.56,
-   "mass_kg": 0.00623,
+   "style": "ichou",
+   "volume_cm3": 8.675,
+   "mass_kg": 0.00842,
    "extents_mm": [
-    23.7,
-    24.4,
-    19.7
+    25.0,
+    25.0,
+    17.7
    ],
-   "min_width_mm": 19.7,
-   "n_vertices": 16
+   "min_width_mm": 17.7,
+   "n_vertices": 54
   },
   {
    "name": "daikon_0064",
    "food": "daikon",
-   "style": "random",
-   "volume_cm3": 6.601,
-   "mass_kg": 0.00627,
+   "style": "ichou",
+   "volume_cm3": 8.022,
+   "mass_kg": 0.00778,
    "extents_mm": [
-    26.0,
-    23.5,
-    21.8
+    25.4,
+    23.6,
+    17.4
    ],
-   "min_width_mm": 21.0,
-   "n_vertices": 18
+   "min_width_mm": 17.4,
+   "n_vertices": 56
   },
   {
    "name": "daikon_0065",
    "food": "daikon",
-   "style": "dice",
-   "volume_cm3": 5.501,
-   "mass_kg": 0.00523,
+   "style": "ichou",
+   "volume_cm3": 7.68,
+   "mass_kg": 0.00745,
    "extents_mm": [
-    18.7,
-    17.8,
-    16.7
+    23.2,
+    23.2,
+    18.7
    ],
-   "min_width_mm": 16.7,
-   "n_vertices": 8
+   "min_width_mm": 18.7,
+   "n_vertices": 52
   },
   {
    "name": "daikon_0066",
    "food": "daikon",
-   "style": "random",
-   "volume_cm3": 9.117,
-   "mass_kg": 0.00866,
+   "style": "ichou",
+   "volume_cm3": 6.687,
+   "mass_kg": 0.00649,
    "extents_mm": [
-    26.7,
-    31.4,
-    24.8
+    23.2,
+    23.1,
+    16.6
    ],
-   "min_width_mm": 24.8,
-   "n_vertices": 20
+   "min_width_mm": 16.6,
+   "n_vertices": 52
   },
   {
    "name": "daikon_0067",
    "food": "daikon",
-   "style": "random",
-   "volume_cm3": 9.692,
-   "mass_kg": 0.00921,
+   "style": "ichou",
+   "volume_cm3": 9.716,
+   "mass_kg": 0.00942,
    "extents_mm": [
-    29.2,
-    27.9,
-    21.3
+    27.6,
+    27.6,
+    16.8
    ],
-   "min_width_mm": 21.3,
-   "n_vertices": 12
+   "min_width_mm": 16.8,
+   "n_vertices": 52
   },
   {
    "name": "daikon_0068",
    "food": "daikon",
-   "style": "dice",
-   "volume_cm3": 12.319,
-   "mass_kg": 0.0117,
+   "style": "ichou",
+   "volume_cm3": 5.634,
+   "mass_kg": 0.00547,
    "extents_mm": [
-    29.8,
-    21.0,
-    20.0
+    22.0,
+    22.0,
+    15.3
    ],
-   "min_width_mm": 20.0,
-   "n_vertices": 12
+   "min_width_mm": 15.3,
+   "n_vertices": 52
   },
   {
    "name": "daikon_0069",
    "food": "daikon",
-   "style": "random",
-   "volume_cm3": 9.386,
-   "mass_kg": 0.00892,
+   "style": "ichou",
+   "volume_cm3": 8.951,
+   "mass_kg": 0.00868,
    "extents_mm": [
-    25.1,
-    33.7,
-    23.2
+    26.4,
+    24.7,
+    18.0
    ],
-   "min_width_mm": 23.2,
-   "n_vertices": 12
+   "min_width_mm": 18.0,
+   "n_vertices": 56
   },
   {
    "name": "daikon_0070",
    "food": "daikon",
-   "style": "random",
-   "volume_cm3": 8.6,
-   "mass_kg": 0.00817,
+   "style": "ichou",
+   "volume_cm3": 9.64,
+   "mass_kg": 0.00935,
    "extents_mm": [
-    27.6,
-    28.8,
-    26.0
+    27.9,
+    27.3,
+    16.2
    ],
-   "min_width_mm": 25.4,
-   "n_vertices": 20
+   "min_width_mm": 16.2,
+   "n_vertices": 54
   },
   {
    "name": "daikon_0071",
    "food": "daikon",
-   "style": "dice",
-   "volume_cm3": 9.1,
-   "mass_kg": 0.00865,
+   "style": "ichou",
+   "volume_cm3": 9.597,
+   "mass_kg": 0.00931,
    "extents_mm": [
-    24.0,
-    20.0,
-    19.5
+    28.3,
+    28.4,
+    15.5
    ],
-   "min_width_mm": 19.5,
-   "n_vertices": 8
+   "min_width_mm": 15.5,
+   "n_vertices": 56
   },
   {
    "name": "daikon_0072",
    "food": "daikon",
-   "style": "random",
-   "volume_cm3": 10.343,
-   "mass_kg": 0.00983,
+   "style": "ichou",
+   "volume_cm3": 8.654,
+   "mass_kg": 0.00839,
    "extents_mm": [
-    29.7,
-    30.4,
-    24.4
+    24.4,
+    24.4,
+    18.9
    ],
-   "min_width_mm": 23.3,
-   "n_vertices": 36
+   "min_width_mm": 18.9,
+   "n_vertices": 54
   },
   {
    "name": "daikon_0073",
    "food": "daikon",
-   "style": "random",
-   "volume_cm3": 7.713,
-   "mass_kg": 0.00733,
+   "style": "ichou",
+   "volume_cm3": 8.736,
+   "mass_kg": 0.00847,
    "extents_mm": [
-    25.1,
-    34.5,
-    23.3
+    25.8,
+    25.7,
+    17.5
    ],
-   "min_width_mm": 21.9,
-   "n_vertices": 20
+   "min_width_mm": 17.5,
+   "n_vertices": 52
   },
   {
    "name": "daikon_0074",
    "food": "daikon",
-   "style": "dice",
-   "volume_cm3": 15.979,
-   "mass_kg": 0.01518,
+   "style": "ichou",
+   "volume_cm3": 10.573,
+   "mass_kg": 0.01026,
    "extents_mm": [
-    27.1,
-    24.9,
-    24.4
+    26.9,
+    26.6,
+    19.1
    ],
-   "min_width_mm": 24.4,
-   "n_vertices": 12
+   "min_width_mm": 19.1,
+   "n_vertices": 54
   },
   {
    "name": "daikon_0075",
    "food": "daikon",
-   "style": "random",
-   "volume_cm3": 8.752,
-   "mass_kg": 0.00831,
+   "style": "ichou",
+   "volume_cm3": 9.05,
+   "mass_kg": 0.00878,
    "extents_mm": [
-    26.0,
-    27.3,
-    20.5
+    24.3,
+    24.3,
+    19.7
    ],
-   "min_width_mm": 20.5,
-   "n_vertices": 20
+   "min_width_mm": 19.7,
+   "n_vertices": 54
   },
   {
    "name": "daikon_0076",
    "food": "daikon",
-   "style": "random",
-   "volume_cm3": 9.959,
-   "mass_kg": 0.00946,
+   "style": "ichou",
+   "volume_cm3": 9.852,
+   "mass_kg": 0.00956,
    "extents_mm": [
-    30.8,
-    30.5,
-    23.2
+    27.3,
+    27.3,
+    17.1
    ],
-   "min_width_mm": 22.3,
-   "n_vertices": 18
+   "min_width_mm": 17.1,
+   "n_vertices": 54
   },
   {
    "name": "daikon_0077",
    "food": "daikon",
-   "style": "dice",
-   "volume_cm3": 13.612,
-   "mass_kg": 0.01293,
+   "style": "ichou",
+   "volume_cm3": 6.848,
+   "mass_kg": 0.00664,
    "extents_mm": [
-    26.0,
-    27.6,
-    19.4
+    24.2,
+    24.2,
+    15.3
    ],
-   "min_width_mm": 19.4,
-   "n_vertices": 8
+   "min_width_mm": 15.3,
+   "n_vertices": 52
   },
   {
    "name": "daikon_0078",
    "food": "daikon",
-   "style": "random",
-   "volume_cm3": 11.113,
-   "mass_kg": 0.01056,
+   "style": "ichou",
+   "volume_cm3": 6.605,
+   "mass_kg": 0.00641,
    "extents_mm": [
-    33.1,
-    28.4,
-    23.4
+    23.7,
+    23.4,
+    15.3
    ],
-   "min_width_mm": 22.9,
-   "n_vertices": 20
+   "min_width_mm": 15.3,
+   "n_vertices": 54
   },
   {
    "name": "daikon_0079",
    "food": "daikon",
-   "style": "random",
-   "volume_cm3": 8.139,
-   "mass_kg": 0.00773,
+   "style": "ichou",
+   "volume_cm3": 6.947,
+   "mass_kg": 0.00674,
    "extents_mm": [
-    27.2,
-    29.7,
-    23.4
+    24.7,
+    24.6,
+    15.1
    ],
-   "min_width_mm": 22.0,
-   "n_vertices": 18
+   "min_width_mm": 15.1,
+   "n_vertices": 52
   },
   {
    "name": "daikon_0080",
    "food": "daikon",
-   "style": "dice",
-   "volume_cm3": 8.941,
-   "mass_kg": 0.00849,
+   "style": "ichou",
+   "volume_cm3": 9.187,
+   "mass_kg": 0.00891,
    "extents_mm": [
-    19.8,
-    28.1,
-    16.3
+    27.5,
+    27.5,
+    15.7
    ],
-   "min_width_mm": 16.3,
-   "n_vertices": 8
+   "min_width_mm": 15.7,
+   "n_vertices": 54
   },
   {
    "name": "daikon_0081",
    "food": "daikon",
-   "style": "random",
-   "volume_cm3": 9.67,
-   "mass_kg": 0.00919,
+   "style": "ichou",
+   "volume_cm3": 9.293,
+   "mass_kg": 0.00901,
    "extents_mm": [
-    30.0,
-    30.3,
-    22.3
+    27.7,
+    27.7,
+    15.6
    ],
-   "min_width_mm": 22.3,
-   "n_vertices": 20
+   "min_width_mm": 15.6,
+   "n_vertices": 54
   },
   {
    "name": "daikon_0082",
    "food": "daikon",
-   "style": "random",
-   "volume_cm3": 7.969,
-   "mass_kg": 0.00757,
+   "style": "ichou",
+   "volume_cm3": 8.113,
+   "mass_kg": 0.00787,
    "extents_mm": [
-    27.9,
-    25.1,
-    23.0
+    26.8,
+    26.8,
+    15.1
    ],
-   "min_width_mm": 23.0,
-   "n_vertices": 18
+   "min_width_mm": 15.1,
+   "n_vertices": 52
   },
   {
    "name": "daikon_0083",
    "food": "daikon",
-   "style": "dice",
-   "volume_cm3": 10.706,
-   "mass_kg": 0.01017,
+   "style": "ichou",
+   "volume_cm3": 10.716,
+   "mass_kg": 0.01039,
    "extents_mm": [
-    24.7,
-    25.1,
-    19.9
+    27.6,
+    27.6,
+    18.4
    ],
-   "min_width_mm": 19.9,
-   "n_vertices": 30
+   "min_width_mm": 18.4,
+   "n_vertices": 52
   },
   {
    "name": "daikon_0084",
    "food": "daikon",
-   "style": "random",
-   "volume_cm3": 9.219,
-   "mass_kg": 0.00876,
+   "style": "ichou",
+   "volume_cm3": 8.246,
+   "mass_kg": 0.008,
    "extents_mm": [
-    26.9,
-    34.2,
-    20.1
+    26.6,
+    24.9,
+    16.2
    ],
-   "min_width_mm": 20.1,
-   "n_vertices": 18
+   "min_width_mm": 16.2,
+   "n_vertices": 56
   },
   {
    "name": "daikon_0085",
    "food": "daikon",
-   "style": "random",
-   "volume_cm3": 8.037,
-   "mass_kg": 0.00764,
+   "style": "ichou",
+   "volume_cm3": 9.281,
+   "mass_kg": 0.009,
    "extents_mm": [
-    25.2,
-    31.3,
-    19.7
+    27.9,
+    27.7,
+    15.4
    ],
-   "min_width_mm": 19.7,
-   "n_vertices": 20
+   "min_width_mm": 15.4,
+   "n_vertices": 54
   },
   {
    "name": "daikon_0086",
    "food": "daikon",
-   "style": "dice",
-   "volume_cm3": 13.171,
-   "mass_kg": 0.01251,
+   "style": "ichou",
+   "volume_cm3": 7.33,
+   "mass_kg": 0.00711,
    "extents_mm": [
-    27.1,
-    24.3,
-    20.8
+    23.7,
+    23.5,
+    17.0
    ],
-   "min_width_mm": 20.8,
-   "n_vertices": 22
+   "min_width_mm": 17.0,
+   "n_vertices": 56
   },
   {
    "name": "daikon_0087",
    "food": "daikon",
-   "style": "random",
-   "volume_cm3": 9.387,
-   "mass_kg": 0.00892,
+   "style": "ichou",
+   "volume_cm3": 8.493,
+   "mass_kg": 0.00824,
    "extents_mm": [
-    31.6,
-    31.6,
-    22.4
+    26.3,
+    26.3,
+    15.9
    ],
-   "min_width_mm": 22.4,
-   "n_vertices": 18
+   "min_width_mm": 15.9,
+   "n_vertices": 54
   },
   {
    "name": "daikon_0088",
    "food": "daikon",
-   "style": "random",
-   "volume_cm3": 8.366,
-   "mass_kg": 0.00795,
+   "style": "ichou",
+   "volume_cm3": 8.181,
+   "mass_kg": 0.00794,
    "extents_mm": [
-    30.4,
-    27.5,
-    22.1
+    25.3,
+    24.6,
+    16.9
    ],
-   "min_width_mm": 22.1,
-   "n_vertices": 20
+   "min_width_mm": 16.9,
+   "n_vertices": 54
   },
   {
    "name": "daikon_0089",
    "food": "daikon",
-   "style": "dice",
-   "volume_cm3": 15.945,
-   "mass_kg": 0.01515,
+   "style": "ichou",
+   "volume_cm3": 9.301,
+   "mass_kg": 0.00902,
    "extents_mm": [
-    28.1,
-    25.2,
-    22.6
+    26.7,
+    26.7,
+    16.7
    ],
-   "min_width_mm": 22.6,
-   "n_vertices": 8
+   "min_width_mm": 16.7,
+   "n_vertices": 54
   },
   {
    "name": "daikon_0090",
    "food": "daikon",
-   "style": "random",
-   "volume_cm3": 9.93,
-   "mass_kg": 0.00943,
+   "style": "ichou",
+   "volume_cm3": 6.968,
+   "mass_kg": 0.00676,
    "extents_mm": [
-    28.2,
-    29.9,
-    25.2
+    22.9,
+    23.7,
+    16.8
    ],
-   "min_width_mm": 25.2,
-   "n_vertices": 20
+   "min_width_mm": 16.8,
+   "n_vertices": 56
   },
   {
    "name": "daikon_0091",
    "food": "daikon",
-   "style": "random",
-   "volume_cm3": 10.522,
-   "mass_kg": 0.01,
+   "style": "ichou",
+   "volume_cm3": 8.846,
+   "mass_kg": 0.00858,
    "extents_mm": [
-    31.2,
-    30.4,
-    23.7
+    25.3,
+    25.2,
+    17.8
    ],
-   "min_width_mm": 23.7,
-   "n_vertices": 26
+   "min_width_mm": 17.8,
+   "n_vertices": 54
   },
   {
    "name": "daikon_0092",
    "food": "daikon",
-   "style": "dice",
-   "volume_cm3": 11.221,
-   "mass_kg": 0.01066,
+   "style": "ichou",
+   "volume_cm3": 9.387,
+   "mass_kg": 0.00911,
    "extents_mm": [
-    26.0,
-    21.8,
-    20.2
+    25.4,
+    25.4,
+    19.0
    ],
-   "min_width_mm": 20.2,
-   "n_vertices": 8
+   "min_width_mm": 19.0,
+   "n_vertices": 52
   },
   {
    "name": "daikon_0093",
    "food": "daikon",
-   "style": "random",
-   "volume_cm3": 7.121,
-   "mass_kg": 0.00677,
+   "style": "ichou",
+   "volume_cm3": 8.721,
+   "mass_kg": 0.00846,
    "extents_mm": [
-    29.0,
-    29.1,
-    23.3
+    24.1,
+    23.9,
+    19.4
    ],
-   "min_width_mm": 20.0,
-   "n_vertices": 20
+   "min_width_mm": 19.4,
+   "n_vertices": 54
   },
   {
    "name": "daikon_0094",
    "food": "daikon",
-   "style": "random",
-   "volume_cm3": 7.127,
-   "mass_kg": 0.00677,
+   "style": "ichou",
+   "volume_cm3": 9.801,
+   "mass_kg": 0.00951,
    "extents_mm": [
-    25.2,
-    30.0,
-    22.3
+    29.1,
+    27.8,
+    15.7
    ],
-   "min_width_mm": 22.3,
-   "n_vertices": 20
+   "min_width_mm": 15.7,
+   "n_vertices": 56
   },
   {
    "name": "daikon_0095",
    "food": "daikon",
-   "style": "dice",
-   "volume_cm3": 13.33,
-   "mass_kg": 0.01266,
+   "style": "ichou",
+   "volume_cm3": 8.776,
+   "mass_kg": 0.00851,
    "extents_mm": [
-    25.9,
-    26.0,
-    20.8
+    25.0,
+    26.3,
+    17.4
    ],
-   "min_width_mm": 20.8,
-   "n_vertices": 18
+   "min_width_mm": 17.4,
+   "n_vertices": 56
   },
   {
    "name": "daikon_0096",
    "food": "daikon",
-   "style": "random",
-   "volume_cm3": 7.992,
-   "mass_kg": 0.00759,
+   "style": "ichou",
+   "volume_cm3": 6.967,
+   "mass_kg": 0.00676,
    "extents_mm": [
-    34.3,
-    30.1,
-    21.2
+    22.8,
+    22.8,
+    17.6
    ],
-   "min_width_mm": 21.2,
-   "n_vertices": 18
+   "min_width_mm": 17.6,
+   "n_vertices": 52
   },
   {
    "name": "daikon_0097",
    "food": "daikon",
-   "style": "random",
-   "volume_cm3": 8.588,
-   "mass_kg": 0.00816,
+   "style": "ichou",
+   "volume_cm3": 8.581,
+   "mass_kg": 0.00832,
    "extents_mm": [
-    25.3,
-    29.5,
-    24.3
+    24.1,
+    24.1,
+    19.1
    ],
-   "min_width_mm": 23.7,
-   "n_vertices": 18
+   "min_width_mm": 19.1,
+   "n_vertices": 54
   },
   {
    "name": "daikon_0098",
    "food": "daikon",
-   "style": "dice",
-   "volume_cm3": 13.07,
-   "mass_kg": 0.01242,
+   "style": "ichou",
+   "volume_cm3": 8.912,
+   "mass_kg": 0.00864,
    "extents_mm": [
-    26.7,
-    24.2,
-    20.6
+    27.4,
+    28.3,
+    15.1
    ],
-   "min_width_mm": 20.6,
-   "n_vertices": 8
+   "min_width_mm": 15.1,
+   "n_vertices": 56
   },
   {
    "name": "daikon_0099",
    "food": "daikon",
-   "style": "random",
-   "volume_cm3": 9.804,
-   "mass_kg": 0.00931,
+   "style": "ichou",
+   "volume_cm3": 10.739,
+   "mass_kg": 0.01042,
    "extents_mm": [
-    28.3,
-    32.2,
-    23.3
+    27.7,
+    27.7,
+    18.4
    ],
-   "min_width_mm": 21.3,
-   "n_vertices": 18
+   "min_width_mm": 18.4,
+   "n_vertices": 52
   }
  ]
 }

@@ -12,7 +12,7 @@ from so101_food.env.factory import make_env, split_of  # noqa: E402
 from so101_food.env.pot_task import TASK_DESCRIPTION_LANGUAGE, failure_reason  # noqa: E402
 from so101_food.env.spec import TaskSpec  # noqa: E402
 from so101_food.expert.pot_expert import PotExpert, run_expert_episode  # noqa: E402
-from so101_food.shapes.cut import PieceSpec, support_margin  # noqa: E402
+from so101_food.shapes.cut import FOOD_DENSITY, PieceSpec, support_margin  # noqa: E402
 from so101_food.shapes.library import DEFAULT_SETS, load_set  # noqa: E402
 
 FOODS = ("carrot", "potato", "daikon")
@@ -35,6 +35,17 @@ def test_all_piece_sets_are_committed_and_stable():
         for piece in pieces[:20]:  # 全部は test_step2_multi と同じ考え方で時間がかかるので一部
             mesh = trimesh.load(piece.path, force="mesh")
             assert support_margin(mesh) >= spec.min_support_margin - 1e-6, piece.name
+
+
+def test_food_shapes_and_densities():
+    """じゃがいもは丸みのある乱切り、大根はいちょう切り。重さは食材ごとの密度 × 体積."""
+    for food, style in (("potato", "rounded"), ("daikon", "ichou")):
+        assert {p.style for p in load_set(f"{food}_train")} == {style}
+    for food, density in FOOD_DENSITY.items():
+        piece = load_set(f"{food}_test")[0]
+        volume = trimesh.load(piece.path, force="mesh").volume
+        assert piece.mass_kg == pytest.approx(volume * density, rel=1e-3)
+    assert FOOD_DENSITY["potato"] > FOOD_DENSITY["carrot"] > FOOD_DENSITY["daikon"]
 
 
 def test_split_of():

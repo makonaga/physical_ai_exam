@@ -16,12 +16,12 @@ from pathlib import Path
 
 import numpy as np
 
-from so101_food.shapes.cut import CUT_STYLES, make_piece, piece_info
+from so101_food.shapes.cut import FOOD_STYLES, make_piece, piece_info
 
 REPO = Path(__file__).resolve().parents[3]
 PIECES_DIR = REPO / "assets" / "pieces"
 
-# セット名 → (食材, 個数, seed)。切り方は乱切り:角切り = 2:1
+# セット名 → (食材, 個数, seed)。切り方は食材ごとに決まる（shapes/cut.py の FOOD_STYLES）
 DEFAULT_SETS = {
     "carrot_train": ("carrot", 300, 0),
     "carrot_test": ("carrot", 100, 1),
@@ -49,7 +49,8 @@ def generate_set(name: str, food: str, count: int, seed: int, out_dir: Path = PI
     set_dir.mkdir(parents=True, exist_ok=True)
     infos = []
     for i in range(count):
-        style = CUT_STYLES[0] if i % 3 != 2 else CUT_STYLES[1]
+        styles = FOOD_STYLES[food]
+        style = styles[i % len(styles)]
         mesh = make_piece(food, style, rng)
         piece_name = f"{food}_{i:04d}"
         mesh.export(set_dir / f"{piece_name}.obj")

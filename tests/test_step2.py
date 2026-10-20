@@ -12,12 +12,13 @@ from so101_food.env.factory import make_env  # noqa: E402
 from so101_food.env.spec import TaskSpec  # noqa: E402
 from so101_food.expert.grasp_plan import plan_top_down_grasp  # noqa: E402
 from so101_food.expert.pot_expert import PotExpert, run_expert_episode  # noqa: E402
-from so101_food.shapes.cut import CUT_STYLES, FOOD_TYPES, PieceSpec, make_piece, min_width  # noqa: E402
+from so101_food.shapes.cut import FOOD_STYLES, PieceSpec, make_piece, min_width  # noqa: E402
 from so101_food.shapes.library import load_set  # noqa: E402
 
 
-@pytest.mark.parametrize("food", FOOD_TYPES)
-@pytest.mark.parametrize("style", CUT_STYLES)
+@pytest.mark.parametrize(
+    ("food", "style"), sorted({(f, s) for f, styles in FOOD_STYLES.items() for s in styles})
+)
 def test_piece_meets_size_constraints(food, style):
     spec = PieceSpec()
     mesh = make_piece(food, style, np.random.default_rng(0), spec)
