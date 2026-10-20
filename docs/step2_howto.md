@@ -69,7 +69,8 @@ bash scripts/generate_dataset.sh pot_multi_v1 1000 --task multi
 tail -f logs/generate_pot_multi_v1_*.log
 ```
 
-- `[worker 05] 12/28 (試行 12, 410s)` のような行が流れる（ワーカー 5 番が 28 本中 12 本目を保存した、という意味）。
+- `[shard 005] 12/14 (試行 12, 410s)` のような行が流れる（シャード 5 番が 14 本中 12 本目を保存した、という意味）。
+  `[shard] 40/72 done (...)` は、72 シャード中 40 個が終わったという意味（全体の進み具合）。
 - `[mp4 @ ...] Starting second pass: moving the moov atom ...` という行も大量に出るが、動画を書き出すときの
   お知らせでエラーではない。
 - 見るのをやめるときは Ctrl+C（生成は止まらない）。

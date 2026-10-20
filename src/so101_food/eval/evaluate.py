@@ -32,6 +32,7 @@ from __future__ import annotations
 
 import argparse
 import csv
+import gc
 import json
 import time
 from collections import Counter
@@ -89,6 +90,8 @@ def _evaluate_chunk(job: dict) -> list[dict]:
             if rig is not None:
                 rig.close()
                 env.close()
+                env = rig = None
+                gc.collect()  # 古い環境のメモリを、新しい環境を作る前に確実に解放する
             env = make_env(replace(spec, pool_size=1), np.random.default_rng([job["seed"], index]))
             env.scene_check = PotExpert(env).can_grasp
             rig = CameraRig(env.model)

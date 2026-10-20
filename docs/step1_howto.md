@@ -37,7 +37,7 @@ bash scripts/generate_dataset.sh pot_cube_v1 300
 ```
 
 - 表示された `tail -f ...` のコマンドで進み具合を見られる（見るのをやめるときは Ctrl+C。処理は止まらない）。
-- `[worker 05] 3/9 ...` のような行が 36 プロセス分流れ、最後に `完了: .../data/pot_cube_v1` と出たら終わり。
+- `[shard 005] 3/9 ...` のような行が 36 シャード分流れ、最後に `完了: .../data/pot_cube_v1` と出たら終わり。
 - 結果の確認:
 
   ```bash

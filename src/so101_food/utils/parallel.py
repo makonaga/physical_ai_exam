@@ -40,9 +40,17 @@ def default_workers() -> int:
 
 
 def run_parallel(
-    fn: Callable[[Any], Any], jobs: Iterable[Any], workers: int, label: str = "job"
+    fn: Callable[[Any], Any],
+    jobs: Iterable[Any],
+    workers: int,
+    label: str = "job",
+    max_tasks_per_child: int | None = None,
 ) -> list[Any]:
-    """``fn(job)`` を ``workers`` 個のプロセスで実行し、完了した順に結果を集めて返す."""
+    """``fn(job)`` を ``workers`` 個のプロセスで実行し、完了した順に結果を集めて返す.
+
+    ``max_tasks_per_child`` を指定すると、各プロセスはその数のジョブを終えたら作り直される
+    （メモリが増え続ける処理向け）.
+    """
     jobs = list(jobs)
     results = []
     t0 = time.time()
@@ -51,7 +59,11 @@ def run_parallel(
             results.append(fn(job))
             print(f"[{label}] {i}/{len(jobs)} done ({time.time() - t0:.0f}s)", flush=True)
         return results
-    with ProcessPoolExecutor(max_workers=workers, mp_context=get_context("spawn")) as pool:
+    with ProcessPoolExecutor(
+        max_workers=workers,
+        mp_context=get_context("spawn"),
+        max_tasks_per_child=max_tasks_per_child,
+    ) as pool:
         futures = [pool.submit(fn, job) for job in jobs]
         for i, future in enumerate(as_completed(futures), 1):
             results.append(future.result())

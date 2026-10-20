@@ -276,6 +276,13 @@ class PotTaskEnv(PickEnv):
             [self._footprint(i) for i in range(len(self._slots))] if clutter is not None else []
         )
 
+    def close(self) -> None:
+        # scene_check にはエキスパートのメソッドを入れる（エキスパートもこの環境を参照する）。
+        # 外さないと参照が循環し、古い環境（MuJoCo のモデルなど、数百 MB）がすぐには解放されず、
+        # 環境を作り直すたびにメモリが増える（並列のデータ生成でメモリ不足になった）
+        self.scene_check = None
+        super().close()
+
     @property
     def task_description(self) -> str:
         if self.clutter is None:

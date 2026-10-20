@@ -4,13 +4,17 @@
     python -m so101_food.datagen.generate --name pot_multi_v1 --task multi --episodes 1000
     python -m so101_food.datagen.generate --name pot_lang_v1 --task lang --episodes 1500
 
-各ワーカーは次を繰り返し、自分の割り当て数だけ成功エピソードを集める。
+成功エピソードを ``--episodes-per-shard`` 本以下ずつの「シャード」に分け、各シャードを
+新しいプロセスで作る（並列数は ``--workers``）。1 つのプロセスで長く作り続けると、環境の
+作り直しのたびにメモリが少しずつ増え、並列数が多いとメモリ不足になるため
+（段階3で 1 プロセスあたり 42 本ずつ作ったとき、終わる直前にスペースごと止まった）。
+各シャードでは次を繰り返し、割り当て数だけ成功エピソードを集める。
 
 1. エキスパートを描画なしで実行し、状態列（qpos）と行動列を記録する（速い）
 2. 成功したエピソードだけ、記録した状態列からカメラ画像を描画し直す（遅い）
 3. LeRobot v3 形式のシャードに保存する
 
-最後に全ワーカーのシャードを 1 つのデータセットに統合し、生成の統計
+最後に全シャードを 1 つのデータセットに統合し、生成の統計
 （試行数・成功率・失敗の内訳）を ``generation_stats.json`` に書く。
 シャードは一時ディレクトリ（既定: ホーム配下のキャッシュ）に作り、統合後に消す。
 
@@ -25,7 +29,9 @@
 from __future__ import annotations
 
 import argparse
+import gc
 import json
+import math
 import shutil
 import time
 from collections import Counter
@@ -57,22 +63,24 @@ def _generate_shard(job: dict) -> dict:
     _quiet_libraries()
     t0 = time.time()
     spec = TaskSpec(**job["task"])
-    env = rig = None
+    env = rig = expert = None
 
-    def rebuild(count: int):
-        nonlocal env, rig
+    def rebuild(count: int) -> None:
+        nonlocal env, rig, expert
         if rig is not None:
             rig.close()
             env.close()
+            # 古い環境のメモリ（MuJoCo のモデルなど）を、新しい環境を作る前に確実に解放する
+            env = rig = expert = None
+            gc.collect()
         # 食材片の選び方もワーカーと作り直しの回数から決まるので、生成は再現できる
         env = make_env(spec, np.random.default_rng([job["seed_start"], count]))
         rig = CameraRig(env.model)
-        new_expert = PotExpert(env)
+        expert = PotExpert(env)
         # 複数片のとき、エキスパートが掴めない配置（指が他の片に当たるなど）は reset で置き直す
-        env.scene_check = new_expert.can_grasp
-        return new_expert
+        env.scene_check = expert.can_grasp
 
-    expert = rebuild(0)
+    rebuild(0)
     ds = LeRobotDataset.create(
         repo_id=job["repo_id"],
         fps=CONTROL_HZ,
@@ -88,7 +96,7 @@ def _generate_shard(job: dict) -> dict:
     k = 0
     while len(episodes) < job["quota"] and k < job["max_attempts"]:
         if spec.task != "cube" and k > 0 and k % job["rebuild_every"] == 0:
-            expert = rebuild(k // job["rebuild_every"])
+            rebuild(k // job["rebuild_every"])
         seed = job["seed_start"] + k * job["seed_stride"]
         k += 1
         rec = run_expert_episode(env, expert, seed)
@@ -118,7 +126,7 @@ def _generate_shard(job: dict) -> dict:
             }
         )
         print(
-            f"[worker {job['worker']:02d}] {len(episodes)}/{job['quota']} "
+            f"[shard {job['shard']:03d}] {len(episodes)}/{job['quota']} "
             f"(試行 {k}, {time.time() - t0:.0f}s)",
             flush=True,
         )
@@ -126,7 +134,7 @@ def _generate_shard(job: dict) -> dict:
     rig.close()
     env.close()
     return {
-        "worker": job["worker"],
+        "shard": job["shard"],
         "root": job["root"],
         "repo_id": job["repo_id"],
         "attempts": k,
@@ -144,6 +152,12 @@ def main(argv: list[str] | None = None) -> None:
     ap.add_argument("--name", default="pot_cube_v1", help="データセット名")
     ap.add_argument("--episodes", type=int, default=300, help="集める成功エピソード数")
     ap.add_argument("--workers", type=int, default=default_workers(), help="並列プロセス数")
+    ap.add_argument(
+        "--episodes-per-shard",
+        type=int,
+        default=15,
+        help="1 つのプロセスで作る成功エピソード数の上限（メモリが増え続けないように）",
+    )
     ap.add_argument("--seed", type=int, default=0, help="seed の開始値")
     ap.add_argument("--out-dir", type=Path, default=REPO / "data", help="保存先の親ディレクトリ")
     ap.add_argument(
@@ -197,28 +211,36 @@ def main(argv: list[str] | None = None) -> None:
 
     gl = prepare_workers()
     workers = max(1, min(args.workers, args.episodes))
-    base, extra = divmod(args.episodes, workers)
-    quotas = [base + (1 if w < extra else 0) for w in range(workers)]
+    # シャード数はプロセス数の倍数にする（最後の回に一部のプロセスだけが動く無駄を減らす）
+    rounds = math.ceil(math.ceil(args.episodes / args.episodes_per_shard) / workers)
+    n_shards = min(args.episodes, workers * rounds)
+    base, extra = divmod(args.episodes, n_shards)
+    quotas = [base + (1 if s < extra else 0) for s in range(n_shards)]
     jobs = [
         {
-            "worker": w,
-            "quota": quotas[w],
-            "max_attempts": quotas[w] * 3 + 5,
-            # ワーカー w の k 回目の試行は seed = seed + w + k * workers（全体で重複しない）
-            "seed_start": args.seed + w,
-            "seed_stride": workers,
+            "shard": s,
+            "quota": quotas[s],
+            "max_attempts": quotas[s] * 3 + 5,
+            # シャード s の k 回目の試行は seed = seed + s + k * シャード数（全体で重複しない）
+            "seed_start": args.seed + s,
+            "seed_stride": n_shards,
             "task": task.to_dict(),
             "rebuild_every": args.rebuild_every,
-            "repo_id": f"local/{args.name}_shard{w:03d}",
-            "root": str(work / f"shard{w:03d}"),
+            "repo_id": f"local/{args.name}_shard{s:03d}",
+            "root": str(work / f"shard{s:03d}"),
         }
-        for w in range(workers)
+        for s in range(n_shards)
     ]
-    print(f"成功 {args.episodes} エピソードを {workers} プロセスで生成します", flush=True)
+    print(
+        f"成功 {args.episodes} エピソードを {n_shards} シャード"
+        f"（{base}〜{base + (extra > 0)} 本ずつ）に分け、{workers} プロセスで並列に生成します",
+        flush=True,
+    )
     print(f"描画: {gl.renderer}", flush=True)
     t0 = time.time()
-    results = run_parallel(_generate_shard, jobs, workers, "shard")
-    results.sort(key=lambda r: r["worker"])
+    # シャードごとにプロセスを作り直す（max_tasks_per_child=1）
+    results = run_parallel(_generate_shard, jobs, workers, "shard", max_tasks_per_child=1)
+    results.sort(key=lambda r: r["shard"])
     t_gen = time.time() - t0
 
     from lerobot.datasets.aggregate import aggregate_datasets
@@ -247,6 +269,7 @@ def main(argv: list[str] | None = None) -> None:
         "expert_success_rate": round(n_success / max(attempts, 1), 4),
         "expert_outcomes": dict(reasons),
         "workers": workers,
+        "shards": n_shards,
         "renderer": gl.renderer,
         "generation_time_s": round(t_gen, 1),
         "total_time_s": round(time.time() - t0, 1),
