@@ -15,13 +15,13 @@
 | 0 | 環境構築、グリッパ寸法・作業領域の確認、把持できるかの確認 | 完了。結果: [docs/step0_notes.md](docs/step0_notes.md) |
 | 1 | 立方体 1 個でエキスパート → データ生成 → ACT 学習 → 評価 | 完了（成功率 82%）。手順: [docs/step1_howto.md](docs/step1_howto.md)、結果: [docs/step1_results.md](docs/step1_results.md) |
 | 2 | 形・大きさがランダムなにんじんの小片を 5〜20 個散らばせ、ロボットに一番近い片を鍋に入れる | 学習・評価まで完了（初めて見る形で成功率 56%。掴む片が遠いと掴み損ねる）。原因を調査中。手順: [docs/step2_howto.md](docs/step2_howto.md)、結果: [docs/step2_results.md](docs/step2_results.md) |
-| 3 | にんじん・じゃがいも・大根の片を混ぜて 5〜20 個散らばせ、指示文で指定した食材の一番近い片を鍋に入れる（SmolVLA と、指示文を読まない ACT を比較） | 実装完了。データ生成・学習・評価はこれから。手順: [docs/step3_howto.md](docs/step3_howto.md) |
+| 3 | にんじん・じゃがいも・大根の片を混ぜて 5〜20 個散らばせ、指示文で指定した食材の一番近い片を鍋に入れる（SmolVLA と、指示文を読まない ACT を比較） | 学習データの生成まで完了（1,500 エピソード）。学習・評価はこれから。手順: [docs/step3_howto.md](docs/step3_howto.md)、結果: [docs/step3_results.md](docs/step3_results.md) |
 | 4 | 動画・レポート・リポジトリ整理 | 未着手 |
 | ― | ACT を VLA（SmolVLA）に置き換える（段階2のデータで学習し、ACT と比較） | 学習・評価まで完了（初めて見る形で成功率 40%。ACT は 56%。推論し直す間隔を短くしても改善せず 28%）。結果: [docs/vla_results.md](docs/vla_results.md)。手順: [docs/vla_howto.md](docs/vla_howto.md) |
 
 ## 次回の作業
 
-段階3（データ生成 → SmolVLA・ACT の学習 → 評価）。手順は [docs/step3_howto.md](docs/step3_howto.md)。
+段階3の学習（SmolVLA → ACT）と評価。手順は [docs/step3_howto.md](docs/step3_howto.md) の B〜D。
 
 ACT の改善（掴む片が遠いと掴み損ねる原因の調査）は保留中。手順は [docs/step2_results.md](docs/step2_results.md) の 7。
 
@@ -38,6 +38,7 @@ ACT の改善（掴む片が遠いと掴み損ねる原因の調査）は保留�
 | [docs/vla_howto.md](docs/vla_howto.md) | VLA（SmolVLA）: 選んだ理由、学習・評価の手順 |
 | [docs/vla_results.md](docs/vla_results.md) | VLA（SmolVLA）: 結果（学習・評価）と ACT との比較 |
 | [docs/step3_howto.md](docs/step3_howto.md) | 段階3: 実行手順と設計メモ（じゃがいも・大根の形、指示文、対象の選び方） |
+| [docs/step3_results.md](docs/step3_results.md) | 段階3: 結果（データ生成・学習・評価） |
 
 ## セットアップ（SageMaker Studio）
 
